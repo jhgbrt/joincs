@@ -1,30 +1,43 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace JoinCSharp
 {
     class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             if (args.Length < 1 || args.Length > 2)
+            {
                 Console.WriteLine("usage: joincs inputfolder [outputfile]");
-
-            var sources = Directory.GetFiles(args[0], "*.cs").Select(File.ReadAllText);
-            
-            var output = Joiner.Join(sources);
-            
-            if (args.Length == 2)
-            {
-                File.WriteAllText(output, args[1]);
+                return 1;
             }
-            else
+
+            try
             {
-                Console.WriteLine(output);
+                var sources = Directory.GetFiles(args[0], "*.cs", SearchOption.AllDirectories).Select(File.ReadAllText);
+
+                var syntaxTrees = sources.Select(s => CSharpSyntaxTree.ParseText(s)).ToList();
+
+                var output = Joiner.Join(syntaxTrees);
+
+                if (args.Length == 2)
+                {
+                    File.WriteAllText(args[1], output);
+                }
+                else
+                {
+                    Console.WriteLine(output);
+                }
+                return 0;
+
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e.Message);
+                return 1;
             }
         }
     }

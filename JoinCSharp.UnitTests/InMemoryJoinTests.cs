@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Linq;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace JoinCSharp.UnitTests
@@ -11,27 +12,78 @@ namespace JoinCSharp.UnitTests
         {
             var sources = new[]
             {
-                "using System; using System.Text;\r\n\r\n// comment\r\n namespace Abc.Def { \r\n// comment \r\n class A {} }",
-                "using System; " +
-                "using System.IO;" +
-                "namespace Abc.Def { class B {" +
-                "   public void y() { File.ReadAllText(string.Empty); }" +
-                "} }",
-                "using System; using System.IO; namespace CD {" +
-                " class C { " +
-                "   public void x() { " +
-                "       IDbConnection sql;" +
-                "       File.ReadAllText(string.Empty); " +
-                "       } " +
-                "   } " +
-                "}",
-                "using System; namespace EF { class E {} } namespace GH { class G {} }",
-                "using System; class C { public static dynamic x() {return null;} } ",
+                "using Some.Using1;" +
+                "using Some.Using2;\r\n" +
+                "namespace Abc.Def " +
+                "{ \r\n" +
+                "// comment \r\n" +
+                "class A {} }",
+                "using Some.Using1; using Some.Using3; namespace Abc.Def { class B {   public void y() { DomeSomething(); }} }",
+                "using Some.Using1; namespace Abc.Def.Ghi { class C {    public void x() {" +
+                "       // IDbConnection sql;\r\n" +
+                "       DomeSomething2();        }    } }",
+                "using Some.Using3; namespace Xyz.Vwu { class E {} } namespace Xkcd.WhatIf { class G {} }",
+                "using Some.Using1; class C { public static dynamic x() {return null;} } ",
             };
 
-            var result = Joiner.Join(sources);
+            var syntaxTrees = sources.Select(s => CSharpSyntaxTree.ParseText(s)).ToList();
 
-            Console.WriteLine(result);
+            var result = Joiner.Join(syntaxTrees);
+            var expected = @"using Some.Using1;
+using Some.Using2;
+using Some.Using3;
+
+namespace Abc.Def
+{
+    // comment 
+    class A
+    {
+    }
+
+    class B
+    {
+        public void y()
+        {
+            DomeSomething();
+        }
+    }
+}
+
+namespace Abc.Def.Ghi
+{
+    class C
+    {
+        public void x()
+        { // IDbConnection sql;
+            DomeSomething2();
+        }
+    }
+}
+
+namespace Xkcd.WhatIf
+{
+    class G
+    {
+    }
+}
+
+namespace Xyz.Vwu
+{
+    class E
+    {
+    }
+}
+
+class C
+{
+    public static dynamic x()
+    {
+        return null;
+    }
+}";
+            //File.WriteAllText("result.txt", result);
+            //Process.Start("result.txt");
+            Assert.AreEqual(expected, result);
         }
     }
 }
