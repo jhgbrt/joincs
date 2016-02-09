@@ -11,7 +11,7 @@ namespace JoinCSharp.UnitTests
         {
             var sources = new[]
             {
-                "using System; using System.Text;\r\n// comment\r\n namespace Abc.Def { \r\n // comment \r\n class A {} }",
+                "using System; using System.Text;\r\n\r\n// comment\r\n namespace Abc.Def { \r\n// comment \r\n class A {} }",
                 "using System; " +
                 "using System.IO;" +
                 "namespace Abc.Def { class B {" +
@@ -20,6 +20,7 @@ namespace JoinCSharp.UnitTests
                 "using System; using System.IO; namespace CD {" +
                 " class C { " +
                 "   public void x() { " +
+                "       IDbConnection sql;" +
                 "       File.ReadAllText(string.Empty); " +
                 "       } " +
                 "   } " +

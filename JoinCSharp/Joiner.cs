@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -17,6 +16,9 @@ namespace JoinCSharp
         {
             var syntaxTrees = sources.Select(s => CSharpSyntaxTree.ParseText(s)).ToList();
 
+            // compilation is currently needed b/c we want to sort/group usings and namespaces
+            // and therefore need to use the semantic model
+            // would not be needed if we could stick to the syntactic model only
             // TODO how to sensibly determine which references must be added?
             var compilation = CSharpCompilation
                 .Create("tmp")
@@ -29,28 +31,30 @@ namespace JoinCSharp
                 .AddSyntaxTrees(syntaxTrees);
 
             // check the compiler result, just to ensure all references have been added
-            using (var ms = new MemoryStream())
+
+            var result = compilation.Emit(new NullStream());
+            if (!result.Success)
             {
-                var result = compilation.Emit(ms);
-                if (!result.Success)
+                var failures = result.Diagnostics.Where(diagnostic =>
+                    diagnostic.IsWarningAsError ||
+                    diagnostic.Severity == DiagnosticSeverity.Error);
+
+                foreach (var diagnostic in failures)
                 {
-                    var failures = result.Diagnostics.Where(diagnostic =>
-                        diagnostic.IsWarningAsError ||
-                        diagnostic.Severity == DiagnosticSeverity.Error);
-
-                    foreach (Diagnostic diagnostic in failures)
-                    {
-                        Console.Error.WriteLine("{0}: {1}", diagnostic.Id, diagnostic.GetMessage());
-                    }
-                    return null;
+                    Console.Error.WriteLine("{0}: {1}", diagnostic.Id, diagnostic.GetMessage());
                 }
-
+                return null;
             }
 
+            return Join(syntaxTrees, compilation);
+        }
+
+        public static string Join(IEnumerable<SyntaxTree> syntaxTrees, CSharpCompilation compilation)
+        {
             var models = (
                 from syntaxTree in syntaxTrees
                 let semanticModel = compilation.GetSemanticModel(syntaxTree)
-                let compilationUnit = (CompilationUnitSyntax)syntaxTree.GetRoot()
+                let compilationUnit = (CompilationUnitSyntax) syntaxTree.GetRoot()
                 select new
                 {
                     model = semanticModel,
@@ -64,7 +68,7 @@ namespace JoinCSharp
                 from x in models
                 from nsdeclaration in x.namespaceDeclarations
                 let ns = x.model.GetDeclaredSymbol(nsdeclaration)
-                select new { ns, nsdeclaration }
+                select new {ns, nsdeclaration}
                 ).OrderBy(x => x.ns.Name)
                 .GroupBy(x => x.ns);
 
