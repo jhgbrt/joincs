@@ -9,7 +9,7 @@ using Microsoft.CSharp.RuntimeBinder;
 
 namespace JoinCSharp
 {
-    public class Joiner
+    public static class Joiner
     {
         public static string Join(
             IEnumerable<string> sources
@@ -17,15 +17,16 @@ namespace JoinCSharp
         {
             var syntaxTrees = sources.Select(s => CSharpSyntaxTree.ParseText(s)).ToList();
 
+            // TODO how to sensibly determine which references must be added?
             var compilation = CSharpCompilation
                 .Create("tmp")
                 .AddReferences(
-                    MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                    MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location),             // System.Linq
-                    MetadataReference.CreateFromFile(typeof(Binder).Assembly.Location)                  // Microsoft.CSharp
+                    MetadataReference.CreateFromFile(typeof (object).Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof (Enumerable).Assembly.Location), // System.Linq
+                    MetadataReference.CreateFromFile(typeof (Binder).Assembly.Location) // Microsoft.CSharp
                 )
-                .AddSyntaxTrees(syntaxTrees)
-                .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+                .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+                .AddSyntaxTrees(syntaxTrees);
 
             // check the compiler result, just to ensure all references have been added
             using (var ms = new MemoryStream())
