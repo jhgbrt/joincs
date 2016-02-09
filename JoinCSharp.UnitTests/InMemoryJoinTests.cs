@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace JoinCSharp.UnitTests
 {
@@ -26,9 +24,7 @@ namespace JoinCSharp.UnitTests
                 "using Some.Using1; class C { public static dynamic x() {return null;} } ",
             };
 
-            var syntaxTrees = sources.Select(s => CSharpSyntaxTree.ParseText(s)).ToList();
-
-            var result = Joiner.Join(syntaxTrees);
+            var result = Joiner.Join(sources);
             var expected = @"using Some.Using1;
 using Some.Using2;
 using Some.Using3;

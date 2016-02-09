@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace JoinCSharp
 {
@@ -19,9 +18,7 @@ namespace JoinCSharp
             {
                 var sources = Directory.GetFiles(args[0], "*.cs", SearchOption.AllDirectories).Select(File.ReadAllText);
 
-                var syntaxTrees = sources.Select(s => CSharpSyntaxTree.ParseText(s)).ToList();
-
-                var output = Joiner.Join(syntaxTrees);
+                var output = Joiner.Join(sources);
 
                 if (args.Length == 2)
                 {

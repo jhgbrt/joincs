@@ -8,8 +8,10 @@ namespace JoinCSharp
 {
     public static class Joiner
     {
-        public static string Join(IEnumerable<SyntaxTree> syntaxTrees)
+        public static string Join(IEnumerable<string> sources)
         {
+            var syntaxTrees = sources.Select(s => CSharpSyntaxTree.ParseText(s)).ToList();
+
             var models = (
                 from syntaxTree in syntaxTrees
                 let compilationUnit = (CompilationUnitSyntax) syntaxTree.GetRoot()
@@ -34,10 +36,10 @@ namespace JoinCSharp
             var usings = (
                 from x in models
                 from usingDeclaration in x.compilationUnit.Usings
-                select usingDeclaration
-                ).GroupBy(x => x.Name.ToString())
-                .Select(x => x.First())
-                .ToArray();
+                let name = usingDeclaration.Name.ToString()
+                group usingDeclaration by name into usingDeclarations
+                select usingDeclarations.First()
+                ).ToArray();
 
 
             var classDeclarations = models
