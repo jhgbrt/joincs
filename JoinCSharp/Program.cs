@@ -13,10 +13,22 @@ namespace JoinCSharp
                 Console.WriteLine("usage: joincs inputfolder [outputfile]");
                 return 1;
             }
+            var inputDirectory = args[0];
+            if (!Directory.Exists(inputDirectory))
+            {
+                Console.WriteLine($"{inputDirectory}: directory not found");
+                return 1;
+            }
+            var files = Directory.GetFiles(inputDirectory, "*.cs", SearchOption.AllDirectories);
+            if (!files.Any())
+            {
+                Console.WriteLine($"No .cs files found in folder {inputDirectory}");
+                return 1;
+            }
 
             try
             {
-                var sources = Directory.GetFiles(args[0], "*.cs", SearchOption.AllDirectories).Select(File.ReadAllText);
+                var sources = files.Select(File.ReadAllText);
 
                 var output = Joiner.Join(sources);
 
