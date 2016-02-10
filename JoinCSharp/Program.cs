@@ -16,13 +16,13 @@ namespace JoinCSharp
             var inputDirectory = args[0];
             if (!Directory.Exists(inputDirectory))
             {
-                Console.WriteLine($"{inputDirectory}: directory not found");
+                Console.WriteLine("{0}: directory not found", inputDirectory);
                 return 1;
             }
             var files = Directory.GetFiles(inputDirectory, "*.cs", SearchOption.AllDirectories);
             if (!files.Any())
             {
-                Console.WriteLine($"No .cs files found in folder {inputDirectory}");
+                Console.WriteLine("No .cs files found in folder {0}", inputDirectory);
                 return 1;
             }
 
