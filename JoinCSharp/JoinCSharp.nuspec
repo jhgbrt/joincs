@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Join.CSharp</id>
-    <version>1.0.0</version>
+    <version>$version$</version>
     <title>Join CSharp files</title>
     <authors>Jeroen Haegebaert</authors>
     <owners>Jeroen Haegebaert</owners>
