@@ -7,6 +7,30 @@ namespace JoinCSharp
 {
     public static class Extensions
     {
+        public static IEnumerable<FileInfo> Except(this IEnumerable<FileInfo> input, 
+            DirectoryInfo rootDir, 
+            params string[] subDirNames)
+        {
+            var folders = subDirNames.Select(rootDir.SubFolder).ToArray();
+            return input.Where(file => !folders.Any(file.SitsBelow));
+        }
+
+        public static DirectoryInfo SubFolder(this DirectoryInfo root, string sub) 
+            => new DirectoryInfo(Path.Combine(root.FullName, sub));
+
+        public static bool SitsBelow(this FileInfo file, DirectoryInfo folder) 
+            => file.Directory.Parents().Any(dir => dir.FullName.Equals(folder.FullName));
+
+        public static IEnumerable<DirectoryInfo> Parents(this DirectoryInfo info)
+        {
+            var item = info;
+            while (item != null)
+            {
+                yield return item;
+                item = item.Parent;
+            }
+        }
+        
         public static IEnumerable<FileInfo> WriteLine(this IEnumerable<FileInfo> input, TextWriter writer)
         {
             foreach (var f in input)

@@ -6,7 +6,6 @@ using System;
 
 namespace JoinCSharp.UnitTests
 {
-
     [TestClass]
     public class CodeAnalysisExperiments
     {

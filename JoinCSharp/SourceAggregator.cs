@@ -42,14 +42,14 @@ namespace JoinCSharp
         public string GetResult()
         {
             var namespaces = (
-                    from @namespace in Namespaces.WithoutTrivia()
+                    from @namespace in Namespaces
                     let name = @namespace.Name.ToString()
                     orderby name
                     group @namespace by name
                     into ns
                     select SyntaxFactory
                         .NamespaceDeclaration(SyntaxFactory.ParseName(ns.Key))
-                        .AddMembers(ns.SelectMany(x => x.Members.WithoutTrivia()).WithoutTrivia().ToArray())
+                        .AddMembers(ns.SelectMany(x => x.Members.WithoutTrivia()).ToArray())
                 )
                 .OfType<MemberDeclarationSyntax>()
                 .ToArray();
@@ -61,6 +61,7 @@ namespace JoinCSharp
                 .AddMembers(namespaces.ToArray())
                 .AddMembers(Other.ToArray())
                 .NormalizeWhitespace();
+
             return cs.ToString();
         }
     }
