@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Reflection;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace JoinCSharp.UnitTests
 {
@@ -42,6 +43,50 @@ namespace JoinCSharp.UnitTests
         }
 
         [TestMethod]
+        public void ExternAlias()
+        {
+            var input = "extern alias SomeAlias;";
+
+            var result = Process(input);
+
+            var expected = "extern alias SomeAlias;";
+
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void AssemblyAttribute()
+        {
+            var input = "using SomeNamespace;\r\n[assembly: SomeAttribute()]";
+
+            var result = Process(input);
+
+            var expected = "using SomeNamespace;\r\n\r\n[assembly: SomeAttribute()]";
+
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void MultipleAssemblyAttributes()
+        {
+            var input = new[]
+            {
+                "using SomeNamespace;\r\n" +
+                "[assembly: SomeAttribute2()]\r\n",
+                "[assembly: SomeAttribute1()]" 
+            };
+
+            var result = input.Join();
+
+            var expected = "using SomeNamespace;\r\n" +
+                           "\r\n" +
+                           "[assembly: SomeAttribute1()]\r\n" +
+                           "[assembly: SomeAttribute2()]";
+
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
         public void ClassInNamespaceWithUsing()
         {
             var input = "using Some.Using; namespace Some.Namespace { class SomeClass {} }";
@@ -60,11 +105,18 @@ namespace JoinCSharp.UnitTests
             Assert.AreEqual(expected, result);
         }
         [TestMethod]
-        public void TwoUsingsAreGrouped()
+        public void TwoSameUsingsAreGrouped()
         {
             var input = "using MyUsing;\r\nusing MyUsing;";
             var result = Process(input);
             Assert.AreEqual("using MyUsing;", result);
+        }
+        [TestMethod]
+        public void TwoDifferentUsingsAreOrdered()
+        {
+            var input = "using MyUsing2;\r\nusing MyUsing1;";
+            var result = Process(input);
+            Assert.AreEqual("using MyUsing1;\r\nusing MyUsing2;", result);
         }
 
         [TestMethod]
@@ -80,7 +132,7 @@ namespace JoinCSharp.UnitTests
         {
             var input = "using MyUsing1;\r\n#if CONDITIONAL\r\nusing MyUsing;\r\n#endif";
             var result = Process(input, "CONDITIONAL");
-            Assert.AreEqual("using MyUsing1;\r\nusing MyUsing;", result);
+            Assert.AreEqual("using MyUsing;\r\nusing MyUsing1;", result);
         }
 
 

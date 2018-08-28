@@ -108,9 +108,9 @@ namespace JoinCSharp.UnitTests
 
             // TODO class comments are stripped
             string expectedWithoutConditional =
+                "using Some.ConditionalUsing;\r\n" +
                 "using Some.Using1;\r\n" +
                 "using Some.Using2;\r\n" +
-                "using Some.ConditionalUsing;\r\n" +
                 "using Some.Using3;\r\n" +
                 "\r\n" +
                 "namespace Abc.Def\r\n" +

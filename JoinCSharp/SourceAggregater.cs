@@ -19,6 +19,8 @@ namespace JoinCSharp
         List<UsingDirectiveSyntax> Usings { get; } = new List<UsingDirectiveSyntax>();
         List<NamespaceDeclarationSyntax> Namespaces { get; } = new List<NamespaceDeclarationSyntax>();
         List<MemberDeclarationSyntax> Other { get; } = new List<MemberDeclarationSyntax>();
+        List<AttributeListSyntax> AttributeLists { get; } = new List<AttributeListSyntax>();
+        List<ExternAliasDirectiveSyntax> Externs { get; } = new List<ExternAliasDirectiveSyntax>();
 
         public SourceAggregator(params string[] preprocessorSymbols)
         {
@@ -32,23 +34,30 @@ namespace JoinCSharp
             Usings.AddRange(compilationUnit.Usings);
             Namespaces.AddRange(compilationUnit.Members.OfType<NamespaceDeclarationSyntax>());
             Other.AddRange(compilationUnit.Members.Except(Namespaces));
+            AttributeLists.AddRange(compilationUnit.AttributeLists);
+            Externs.AddRange(compilationUnit.Externs);
             return this;
         }
-
+        
         public string GetResult()
         {
             var namespaces = (
-                from @namespace in Namespaces.WithoutTrivia()
-                let name = @namespace.Name.ToString()
-                orderby name
-                group @namespace by name into ns
-                select SyntaxFactory
-                    .NamespaceDeclaration(SyntaxFactory.ParseName(ns.Key))
-                    .AddMembers(ns.SelectMany(x => x.Members.WithoutTrivia()).WithoutTrivia().ToArray())
-            ).ToArray();
-
+                    from @namespace in Namespaces.WithoutTrivia()
+                    let name = @namespace.Name.ToString()
+                    orderby name
+                    group @namespace by name
+                    into ns
+                    select SyntaxFactory
+                        .NamespaceDeclaration(SyntaxFactory.ParseName(ns.Key))
+                        .AddMembers(ns.SelectMany(x => x.Members.WithoutTrivia()).WithoutTrivia().ToArray())
+                )
+                .OfType<MemberDeclarationSyntax>()
+                .ToArray();
+            
             var cs = SyntaxFactory.CompilationUnit()
-                .AddUsings(Usings.Distinct(new UsingComparer()).WithoutTrivia().ToArray())
+                .AddUsings(Usings.Distinct(new UsingComparer()).OrderBy(u => u.Name.ToString()).WithoutTrivia().ToArray())
+                .AddAttributeLists(AttributeLists.OrderBy(a => a.ToString()).ToArray())
+                .AddExterns(Externs.ToArray())
                 .AddMembers(namespaces.ToArray())
                 .AddMembers(Other.ToArray())
                 .NormalizeWhitespace();
