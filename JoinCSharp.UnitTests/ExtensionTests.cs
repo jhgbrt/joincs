@@ -52,9 +52,9 @@ namespace JoinCSharp.UnitTests
             }.Select(s => new FileInfo(s));
 
             var rootDir = new DirectoryInfo(@"C:\A");
-            var subdirs = new[] { "AB", "AD"};
+            var subdirs = new[] { "AB", "AD"}.Select(rootDir.SubFolder).ToArray();
 
-            var result = input.Except(rootDir, subdirs);
+            var result = input.Except(subdirs);
 
             var expected = new[]
             {

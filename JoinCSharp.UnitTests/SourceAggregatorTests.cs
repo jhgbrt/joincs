@@ -75,7 +75,7 @@ namespace JoinCSharp.UnitTests
                 "[assembly: SomeAttribute1()]" 
             };
 
-            var result = input.Join();
+            var result = input.Aggregate();
 
             var expected = "using SomeNamespace;\r\n" +
                            "\r\n" +

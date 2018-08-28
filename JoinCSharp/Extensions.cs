@@ -7,13 +7,8 @@ namespace JoinCSharp
 {
     public static class Extensions
     {
-        public static IEnumerable<FileInfo> Except(this IEnumerable<FileInfo> input, 
-            DirectoryInfo rootDir, 
-            params string[] subDirNames)
-        {
-            var folders = subDirNames.Select(rootDir.SubFolder).ToArray();
-            return input.Where(file => !folders.Any(file.SitsBelow));
-        }
+        public static IEnumerable<FileInfo> Except(this IEnumerable<FileInfo> input, params DirectoryInfo[] folders) 
+            => input.Where(file => !folders.Any(file.SitsBelow));
 
         public static DirectoryInfo SubFolder(this DirectoryInfo root, string sub) 
             => new DirectoryInfo(Path.Combine(root.FullName, sub));
@@ -40,22 +35,16 @@ namespace JoinCSharp
             }
         }
 
-        public static IEnumerable<string> ReadContent(this IEnumerable<FileInfo> input)
-        {
-            foreach (var file in input)
-                yield return File.ReadAllText(file.FullName);
-        }
+        public static string ReadAllText(this FileInfo file)
+            => File.ReadAllText(file.FullName);
 
-        public static string Join(
-            this IEnumerable<string> sources,
-            params string[] preprocessorSymbols
-            )
-        {
-            return sources.Aggregate(new SourceAggregator(preprocessorSymbols?.ToArray()), (p, s) => p.AddSource(s)).GetResult();
-        }
-        internal static IEnumerable<T> WithoutTrivia<T>(this IEnumerable<T> input) where T : SyntaxNode
-        {
-            return input.Select(x => x.WithoutTrivia());
-        }
+        public static IEnumerable<string> ReadAllText(this IEnumerable<FileInfo> input) 
+            => input.Select(ReadAllText);
+
+        public static string Aggregate(this IEnumerable<string> sources, params string[] preprocessorSymbols)
+            => sources.Aggregate(new SourceAggregator(preprocessorSymbols?.ToArray()), (p, s) => p.AddSource(s)).GetResult();
+
+        internal static IEnumerable<T> WithoutTrivia<T>(this IEnumerable<T> input) where T : SyntaxNode 
+            => input.Select(x => x.WithoutTrivia());
     }
 }

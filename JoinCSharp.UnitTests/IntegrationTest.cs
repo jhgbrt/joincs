@@ -43,7 +43,7 @@ namespace JoinCSharp.UnitTests
         public void JoinTest_WithoutPreprocessorDirective()
         {
 
-            string result = sources.Join();
+            string result = sources.Aggregate();
 
             string expectedWithoutConditional =
                 "using Some.Using1;\r\n" +
@@ -104,7 +104,7 @@ namespace JoinCSharp.UnitTests
         public void JoinTest_WithPreprocessorDirective()
         {
 
-            string result = sources.Join("CONDITIONAL");
+            string result = sources.Aggregate("CONDITIONAL");
 
             // TODO class comments are stripped
             string expectedWithoutConditional =
