@@ -76,7 +76,7 @@ namespace JoinCSharp
 
             try
             {
-                var output = files.WriteLine().ReadContent().Join(arguments.PreprocessorDirectives);
+                var output = files.WriteLine(Console.Out).ReadContent().Join(arguments.PreprocessorDirectives);
 
                 if (!string.IsNullOrEmpty(arguments.OutputFile))
                 {

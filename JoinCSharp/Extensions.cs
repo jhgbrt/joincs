@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,11 +7,11 @@ namespace JoinCSharp
 {
     public static class Extensions
     {
-        public static IEnumerable<FileInfo> WriteLine(this IEnumerable<FileInfo> input)
+        public static IEnumerable<FileInfo> WriteLine(this IEnumerable<FileInfo> input, TextWriter writer)
         {
             foreach (var f in input)
             {
-                Console.WriteLine($"Processing: {f.FullName}");
+                writer.WriteLine($"Processing: {f.FullName}");
                 yield return f;
             }
         }
