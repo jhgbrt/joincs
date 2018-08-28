@@ -74,7 +74,7 @@ namespace JoinCSharp
 
                 var output = sources.Join(arguments.PreprocessorDirectives);
 
-                if (string.IsNullOrEmpty(arguments.OutputFile))
+                if (!string.IsNullOrEmpty(arguments.OutputFile))
                     File.WriteAllText(arguments.OutputFile, output);
                 else
                     Console.Write(output);
