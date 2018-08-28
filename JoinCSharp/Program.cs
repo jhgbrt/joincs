@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -8,9 +9,9 @@ namespace JoinCSharp
     {
         static int Main(string[] args)
         {
-            if (args.Length < 1 || args.Length > 2)
+            if (args.Length < 2 || args.Length > 3)
             {
-                Console.WriteLine("usage: joincs inputfolder [outputfile]");
+                Console.WriteLine("usage: joincs inputfolder [outputfile] [PREPROCESSOR_DIRECTIVE_1,PREPROCESSOR_DIRECTIVE_2,...]");
                 return 1;
             }
             var inputDirectory = args[0];
@@ -19,6 +20,11 @@ namespace JoinCSharp
                 Console.WriteLine("{0}: directory not found", inputDirectory);
                 return 1;
             }
+
+            var (outputFile, preprocessorSymbols) = ProcessArguments(args.Skip(1));
+
+            var preprocessorDirectives = args.Length > 2 ? args[2].Split(',') : new string[0];
+
             var files = Directory.GetFiles(inputDirectory, "*.cs", SearchOption.AllDirectories);
             if (!files.Any())
             {
@@ -30,24 +36,34 @@ namespace JoinCSharp
             {
                 var sources = files.Select(File.ReadAllText);
 
-                var output = sources.Join();
+                var output = sources.Join(preprocessorDirectives);
 
-                if (args.Length == 2)
-                {
-                    File.WriteAllText(args[1], output);
-                }
+                if (string.IsNullOrEmpty(outputFile))
+                    File.WriteAllText(outputFile, output);
                 else
-                {
-                    Console.WriteLine(output);
-                }
-                return 0;
+                    Console.Write(output);
 
+                return 0;
             }
             catch (Exception e)
             {
                 Console.Error.WriteLine(e.Message);
                 return 1;
             }
+        }
+
+        private static (string outputFile, string[] preprocessorSymbols) ProcessArguments(IEnumerable<string> args)
+        {
+            string outputFile = string.Empty;
+            string[] preprocessorSymbols = new string[0];
+            foreach (var arg in args)
+            {
+                if (Path.GetExtension(arg) == "cs")
+                    outputFile = arg;
+                else
+                    preprocessorSymbols = arg.Split(',');
+            }
+            return (outputFile, preprocessorSymbols);
         }
     }
 }
