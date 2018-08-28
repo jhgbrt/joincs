@@ -30,7 +30,7 @@ namespace JoinCSharp
             {
                 var sources = files.Select(File.ReadAllText);
 
-                var output = Joiner.Join(sources);
+                var output = sources.Join();
 
                 if (args.Length == 2)
                 {
