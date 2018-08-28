@@ -1,34 +1,70 @@
-﻿using System;
+﻿using System.Runtime.CompilerServices;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+[assembly: InternalsVisibleTo("JoinCSharp.UnitTests")]
+
 namespace JoinCSharp
 {
+    class Args
+    {
+        public Args(string[] args)
+        {
+
+            foreach (var arg in args)
+            {
+                if (Directory.Exists(arg) && string.IsNullOrEmpty(InputDirectory))
+                    InputDirectory = arg;
+                else if (Path.HasExtension(arg) && string.IsNullOrEmpty(OutputFile))
+                {
+                    if (Path.GetExtension(arg) == ".cs")
+                        OutputFile = arg;
+                    else
+                        Errors.Add($"Expected '.cs' as extension for output file, but was {Path.GetExtension(arg)}");
+                }
+                else
+                    PreprocessorDirectives = arg.Split(',');
+            }
+
+            if (args.Length < 1 || args.Length > 3)
+            {
+                Errors.Add("Wrong nof arguments");
+            }
+            else if (!Directory.Exists(InputDirectory))
+            {
+                Errors.Add($"{InputDirectory}: directory not found");
+            }
+        }
+
+        public string InputDirectory { get; }
+        public string OutputFile { get; }
+        public string[] PreprocessorDirectives { get; }
+        public List<string> Errors { get; } = new List<string>();
+    }
+
     class Program
     {
         static int Main(string[] args)
         {
-            if (args.Length < 2 || args.Length > 3)
+            var arguments = new Args(args);
+
+            if (arguments.Errors.Any())
             {
-                Console.WriteLine("usage: joincs inputfolder [outputfile] [PREPROCESSOR_DIRECTIVE_1,PREPROCESSOR_DIRECTIVE_2,...]");
+                foreach (var error in arguments.Errors)
+                {
+                    Console.Error.WriteLine(error);
+                }
+                Console.WriteLine(
+                    "usage: joincs inputfolder [outputfile] [PREPROCESSOR_DIRECTIVE_1,PREPROCESSOR_DIRECTIVE_2,...]");
                 return 1;
             }
-            var inputDirectory = args[0];
-            if (!Directory.Exists(inputDirectory))
-            {
-                Console.WriteLine("{0}: directory not found", inputDirectory);
-                return 1;
-            }
 
-            var (outputFile, preprocessorSymbols) = ProcessArguments(args.Skip(1));
-
-            var preprocessorDirectives = args.Length > 2 ? args[2].Split(',') : new string[0];
-
-            var files = Directory.GetFiles(inputDirectory, "*.cs", SearchOption.AllDirectories);
+            var files = Directory.GetFiles(arguments.InputDirectory, "*.cs", SearchOption.AllDirectories);
             if (!files.Any())
             {
-                Console.WriteLine("No .cs files found in folder {0}", inputDirectory);
+                Console.Error.WriteLine($"No .cs files found in folder {arguments.InputDirectory}");
                 return 1;
             }
 
@@ -36,10 +72,10 @@ namespace JoinCSharp
             {
                 var sources = files.Select(File.ReadAllText);
 
-                var output = sources.Join(preprocessorDirectives);
+                var output = sources.Join(arguments.PreprocessorDirectives);
 
-                if (string.IsNullOrEmpty(outputFile))
-                    File.WriteAllText(outputFile, output);
+                if (string.IsNullOrEmpty(arguments.OutputFile))
+                    File.WriteAllText(arguments.OutputFile, output);
                 else
                     Console.Write(output);
 
@@ -50,20 +86,6 @@ namespace JoinCSharp
                 Console.Error.WriteLine(e.Message);
                 return 1;
             }
-        }
-
-        private static (string outputFile, string[] preprocessorSymbols) ProcessArguments(IEnumerable<string> args)
-        {
-            string outputFile = string.Empty;
-            string[] preprocessorSymbols = new string[0];
-            foreach (var arg in args)
-            {
-                if (Path.GetExtension(arg) == "cs")
-                    outputFile = arg;
-                else
-                    preprocessorSymbols = arg.Split(',');
-            }
-            return (outputFile, preprocessorSymbols);
         }
     }
 }

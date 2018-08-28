@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "JoinCSharp": {
+      "commandName": "Project",
+      "commandLineArgs": "..\\Net.Code.ADONet Db.cs",
+      "workingDirectory": "C:\\Users\\Jeroen.haegebaert\\Source\\Repos\\yadal\\Net.Code.ADONet.SingleFile"
+    }
+  }
+}
