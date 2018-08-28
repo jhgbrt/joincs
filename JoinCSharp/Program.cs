@@ -61,7 +61,13 @@ namespace JoinCSharp
                 return 1;
             }
 
-            var files = Directory.GetFiles(arguments.InputDirectory, "*.cs", SearchOption.AllDirectories);
+            var directoryInfo = new DirectoryInfo(arguments.InputDirectory);
+
+            var files = directoryInfo.GetFiles("*.cs", SearchOption.AllDirectories)
+                .Where(f => !f.FullName.StartsWith(Path.Combine(directoryInfo.FullName, "bin"), StringComparison.CurrentCultureIgnoreCase))
+                .Where(f => !f.FullName.StartsWith(Path.Combine(directoryInfo.FullName, "obj"), StringComparison.CurrentCultureIgnoreCase))
+                .ToList();
+
             if (!files.Any())
             {
                 Console.Error.WriteLine($"No .cs files found in folder {arguments.InputDirectory}");
@@ -70,12 +76,13 @@ namespace JoinCSharp
 
             try
             {
-                var sources = files.Select(File.ReadAllText);
-
-                var output = sources.Join(arguments.PreprocessorDirectives);
+                var output = files.WriteLine().ReadContent().Join(arguments.PreprocessorDirectives);
 
                 if (!string.IsNullOrEmpty(arguments.OutputFile))
+                {
+                    Console.WriteLine($"Writing result to {new FileInfo(arguments.OutputFile).FullName}");
                     File.WriteAllText(arguments.OutputFile, output);
+                }
                 else
                     Console.Write(output);
 
