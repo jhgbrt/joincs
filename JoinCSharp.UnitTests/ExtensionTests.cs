@@ -247,5 +247,32 @@ namespace JoinCSharp.UnitTests
 
             Assert.AreEqual(expected, result);
         }
+
+        [TestMethod]
+        public void Preprocess_IfElse()
+        {
+            var input = "#if DEBUG\r\n" +
+                        "DEBUG\r\n" +
+                        "#else\r\n" +
+                        "RELEASE\r\n" +
+                        "#endif";
+
+            var result = input.Preprocess("RELEASE");
+
+            Assert.AreEqual("RELEASE", result);
+        }
+        [TestMethod]
+        public void Preprocess_IfElse_2()
+        {
+            var input = "#if DEBUG\r\n" +
+                        "DEBUG\r\n" +
+                        "#else\r\n" +
+                        "RELEASE\r\n" +
+                        "#endif";
+
+            var result = input.Preprocess("DEBUG");
+
+            Assert.AreEqual("DEBUG", result);
+        }
     }
 }
