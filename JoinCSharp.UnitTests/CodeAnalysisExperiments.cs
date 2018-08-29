@@ -1,14 +1,18 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace JoinCSharp.UnitTests
 {
     [TestClass]
     public class CodeAnalysisExperiments
     {
+
+
+
+
         [TestMethod]
         public void Visitor()
         {
@@ -24,12 +28,51 @@ namespace JoinCSharp.UnitTests
                 "}";
 
             SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(input);
-            CompilationUnitSyntax compilationUnit = (CompilationUnitSyntax)syntaxTree.GetRoot();
-            SyntaxList<MemberDeclarationSyntax> members = compilationUnit.Members;
+            //CompilationUnitSyntax compilationUnit = (CompilationUnitSyntax)syntaxTree.GetRoot();
+            //SyntaxList<MemberDeclarationSyntax> members = compilationUnit.Members;
 
-            MyVisitor walker = new MyVisitor();
-            walker.Visit(syntaxTree.GetRoot());
+            //MyVisitor walker = new MyVisitor();
+            //walker.Visit(syntaxTree.GetRoot());
+
+            var rewriter = new CSharpRemoveRegionsAndDirectivesRewriter();
+            var result = rewriter.Visit(syntaxTree.GetRoot());
+
+            Console.WriteLine(result);
         }
+
+        public class CSharpRemoveRegionsAndDirectivesRewriter : CSharpSyntaxRewriter
+        {
+            public CSharpRemoveRegionsAndDirectivesRewriter()
+                : base(true)
+            {
+            }
+
+            public override SyntaxNode VisitIfDirectiveTrivia(IfDirectiveTriviaSyntax node)
+            {
+                return SyntaxFactory.SkippedTokensTrivia();
+            }
+
+            public override SyntaxNode VisitEndIfDirectiveTrivia(EndIfDirectiveTriviaSyntax node)
+            {
+                return SyntaxFactory.SkippedTokensTrivia();
+            }
+
+            public override SyntaxNode VisitDefineDirectiveTrivia(DefineDirectiveTriviaSyntax node)
+            {
+                return SyntaxFactory.SkippedTokensTrivia();
+            }
+
+            public override SyntaxNode VisitRegionDirectiveTrivia(RegionDirectiveTriviaSyntax node)
+            {
+                return SyntaxFactory.SkippedTokensTrivia();
+            }
+
+            public override SyntaxNode VisitEndRegionDirectiveTrivia(EndRegionDirectiveTriviaSyntax node)
+            {
+                return SyntaxFactory.SkippedTokensTrivia();
+            }
+        }
+
 
         private class MyVisitor : CSharpSyntaxWalker
         {

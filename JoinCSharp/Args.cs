@@ -43,7 +43,7 @@ namespace JoinCSharp
 
         public string InputDirectory { get; }
         public string OutputFile { get; }
-        public string[] PreprocessorDirectives { get; }
+        public string[] PreprocessorDirectives { get; } = new string[0];
         public List<string> Errors { get; } = new List<string>();
     }
 }

@@ -1,4 +1,7 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace JoinCSharp.UnitTests
 {
@@ -14,7 +17,7 @@ namespace JoinCSharp.UnitTests
                 "#endif\r\n" +
                 "namespace Abc.Def " +
                 "{ \r\n" +
-                "// comment \r\n" +
+                "// comment\r\n" +
                 "class A {} }",
 
                 "using Some.Using1; using Some.Using3; namespace Abc.Def { class B {   public void y() { DomeSomething(); }} }",
@@ -25,7 +28,9 @@ namespace JoinCSharp.UnitTests
 
                 "using Some.Using3; namespace Xyz.Vwu { class E {} } namespace Xkcd.WhatIf { class G {} }",
 
-                "using Some.Using1; class C { public static dynamic x() {return null;} } ",
+                "using Some.Using1; class C { \r\n" +
+                "\r\n// commentx\r\n" +
+                "public static dynamic x() {return null;} } ",
 
                 "#if CONDITIONAL\r\n" +
                 "using Some.ConditionalUsing;\r\n" +
@@ -43,7 +48,7 @@ namespace JoinCSharp.UnitTests
         public void JoinTest_WithoutPreprocessorDirective()
         {
 
-            string result = sources.Aggregate();
+            string result = sources.Select(s=>s.ReadLines()).Preprocess().Aggregate();
 
             string expectedWithoutConditional =
                 "using Some.Using1;\r\n" +
@@ -51,7 +56,9 @@ namespace JoinCSharp.UnitTests
                 "using Some.Using3;\r\n" +
                 "\r\n" +
                 "namespace Abc.Def\r\n" +
-                "{\r\n    class A\r\n" +
+                "{\r\n" +
+                "    // comment\r\n" +
+                "    class A\r\n" +
                 "    {\r\n" +
                 "    }\r\n" +
                 "\r\n" +
@@ -89,6 +96,7 @@ namespace JoinCSharp.UnitTests
                 "}\r\n" +
                 "\r\nclass C\r\n" +
                 "{\r\n" +
+                "    // commentx\r\n" +
                 "    public static dynamic x()\r\n" +
                 "    {\r\n" +
                 "        return null;\r\n" +
@@ -104,7 +112,7 @@ namespace JoinCSharp.UnitTests
         public void JoinTest_WithPreprocessorDirective()
         {
 
-            string result = sources.Aggregate("CONDITIONAL");
+            string result = sources.Select(s => s.ReadLines()).Preprocess("CONDITIONAL").Aggregate();
 
             // TODO class comments are stripped
             string expectedWithoutConditional =
@@ -115,6 +123,7 @@ namespace JoinCSharp.UnitTests
                 "\r\n" +
                 "namespace Abc.Def\r\n" +
                 "{\r\n" +
+                "    // comment\r\n" +
                 "    class A\r\n" +
                 "    {\r\n" +
                 "    }\r\n" +
@@ -159,6 +168,7 @@ namespace JoinCSharp.UnitTests
                 "\r\n" +
                 "class C\r\n" +
                 "{\r\n" +
+                "    // commentx\r\n" +
                 "    public static dynamic x()\r\n" +
                 "    {\r\n" +
                 "        return null;\r\n" +

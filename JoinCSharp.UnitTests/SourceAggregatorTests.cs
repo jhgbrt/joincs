@@ -7,7 +7,7 @@ namespace JoinCSharp.UnitTests
     {
         private static string Process(string input, params string[] preprocessorSymbols)
         {
-            return new SourceAggregator(preprocessorSymbols).AddSource(input).GetResult();
+            return new SourceAggregator().AddSource(input.Preprocess(preprocessorSymbols)).GetResult();
         }
 
         [TestMethod]
@@ -241,8 +241,24 @@ namespace JoinCSharp.UnitTests
             Assert.AreEqual("using MyUsing1;\r\nusing MyUsing2;", result);
         }
 
+        // TODO investigate
+        //[TestMethod]
+        //[Ignore("not supported (yet)")]
+        public void ClassWithComment()
+        {
+            var input = "// some comment\r\nclass SomeClass {}";
+
+            var result = Process(input);
+
+            var expected = "// some comment\r\n" +
+                           "class SomeClass\r\n" +
+                           "{\r\n" +
+                           "}";
+
+            Assert.AreEqual(expected, result);
+        }
+
         [TestMethod]
-        [Ignore("This scenario is not supported (yet)")]
         public void ConditionalMethod_NoSymbols_MethodIsStripped()
         {
             string input = "class SomeClass {\r\n" +
@@ -257,7 +273,35 @@ namespace JoinCSharp.UnitTests
                             "{\r\n" +
                             "}";
 
-            var result = Process(input, new string[] { });
+            var result = Process(input);
+
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void ConditionalMethod_WithSymbols_MethodIsNotStripped()
+        {
+            string input = "class SomeClass {\r\n" +
+                           "#if CONDITIONAL1\r\n" +
+                           "    void MyMethod1()\r\n" +
+                           "    {\r\n" +
+                           "    }\r\n" +
+                           "#endif\r\n" +
+                           "#if CONDITIONAL2\r\n" +
+                           "    void MyMethod2()\r\n" +
+                           "    {\r\n" +
+                           "    }\r\n" +
+                           "#endif\r\n" +
+                           "}";
+
+            string expected = "class SomeClass\r\n" +
+                              "{\r\n" +
+                              "    void MyMethod2()\r\n" +
+                              "    {\r\n" +
+                              "    }\r\n" +
+                              "}";
+
+            var result = Process(input, "CONDITIONAL2");
 
             Assert.AreEqual(expected, result);
         }

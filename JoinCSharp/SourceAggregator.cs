@@ -14,22 +14,15 @@ namespace JoinCSharp
             public int GetHashCode(UsingDirectiveSyntax obj) => obj.Name.ToString().GetHashCode();
         }
 
-        private CSharpParseOptions _options;
-
         List<UsingDirectiveSyntax> Usings { get; } = new List<UsingDirectiveSyntax>();
         List<NamespaceDeclarationSyntax> Namespaces { get; } = new List<NamespaceDeclarationSyntax>();
         List<MemberDeclarationSyntax> Other { get; } = new List<MemberDeclarationSyntax>();
         List<AttributeListSyntax> AttributeLists { get; } = new List<AttributeListSyntax>();
         List<ExternAliasDirectiveSyntax> Externs { get; } = new List<ExternAliasDirectiveSyntax>();
 
-        public SourceAggregator(params string[] preprocessorSymbols)
-        {
-            _options = CSharpParseOptions.Default.WithPreprocessorSymbols(preprocessorSymbols);
-        }
-
         public SourceAggregator AddSource(string source)
         {
-            var syntaxTree = CSharpSyntaxTree.ParseText(source, _options);
+            var syntaxTree = CSharpSyntaxTree.ParseText(source);
             var compilationUnit = (CompilationUnitSyntax)syntaxTree.GetRoot();
             Usings.AddRange(compilationUnit.Usings);
             Namespaces.AddRange(compilationUnit.Members.OfType<NamespaceDeclarationSyntax>());
@@ -49,13 +42,13 @@ namespace JoinCSharp
                     into ns
                     select SyntaxFactory
                         .NamespaceDeclaration(SyntaxFactory.ParseName(ns.Key))
-                        .AddMembers(ns.SelectMany(x => x.Members.WithoutTrivia()).ToArray())
+                        .AddMembers(ns.SelectMany(x => x.Members).ToArray())
                 )
                 .OfType<MemberDeclarationSyntax>()
                 .ToArray();
             
             var cs = SyntaxFactory.CompilationUnit()
-                .AddUsings(Usings.Distinct(new UsingComparer()).OrderBy(u => u.Name.ToString()).WithoutTrivia().ToArray())
+                .AddUsings(Usings.Distinct(new UsingComparer()).OrderBy(u => u.Name.ToString()).ToArray())
                 .AddAttributeLists(AttributeLists.OrderBy(a => a.ToString()).ToArray())
                 .AddExterns(Externs.ToArray())
                 .AddMembers(namespaces.ToArray())

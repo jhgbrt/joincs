@@ -35,8 +35,9 @@ namespace JoinCSharp
                     .EnumerateFiles("*.cs", SearchOption.AllDirectories)
                     .Except(subdirs)
                     .WriteLine(Console.Out)
-                    .ReadAllText()
-                    .Aggregate(arguments.PreprocessorDirectives);
+                    .ReadLines()
+                    .Preprocess(arguments.PreprocessorDirectives)
+                    .Aggregate();
 
                 if (!string.IsNullOrEmpty(arguments.OutputFile))
                 {
