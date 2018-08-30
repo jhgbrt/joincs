@@ -1,6 +1,6 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/y085spxvx5bha69q?svg=true)](https://ci.appveyor.com/project/jhgbrt/joincs)
 
-[![Downloads](https://img.shields.io/nuget/dt/Join.CSharp.svg)](https://www.nuget.org/stats/packages/Join.CSharp)
+[![Downloads](https://img.shields.io/nuget/dt/Join.CSharp.svg)](https://www.nuget.org/packages/Join.CSharp)
 
 ## Join CSharp
 
