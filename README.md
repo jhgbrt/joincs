@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/y085spxvx5bha69q?svg=true)](https://ci.appveyor.com/project/jhgbrt/joincs)
+
 ## Join CSharp
 
 Simple, Roslyn-based tool to join a bunch of .cs files into one.
