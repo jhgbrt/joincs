@@ -18,6 +18,7 @@ namespace JoinCSharp.UnitTests
                 "using static Abc.StaticClass;\r\n" + 
                 "namespace Abc.Def " +
                 "{ \r\n" +
+                "using static StaticClass;\r\n" +
                 "// comment\r\n" +
                 "class A {} }",
 
@@ -59,6 +60,8 @@ namespace JoinCSharp.UnitTests
                 "\r\n" +
                 "namespace Abc.Def\r\n" +
                 "{\r\n" +
+                "    using static StaticClass;\r\n" +
+                "\r\n" +
                 "    // comment\r\n" +
                 "    class A\r\n" +
                 "    {\r\n" +
@@ -126,6 +129,8 @@ namespace JoinCSharp.UnitTests
                 "\r\n" +
                 "namespace Abc.Def\r\n" +
                 "{\r\n" +
+                "    using static StaticClass;\r\n" +
+                "\r\n" +
                 "    // comment\r\n" +
                 "    class A\r\n" +
                 "    {\r\n" +

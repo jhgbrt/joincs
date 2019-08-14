@@ -117,6 +117,19 @@ namespace JoinCSharp.UnitTests
             var result = Process(input);
             Assert.AreEqual("using MyUsing1;\r\nusing MyUsing2;", result);
         }
+        [TestMethod]
+        public void StaticUsingInNamespace()
+        {
+            var input = "namespace Some.Namespace { using static SomeClass; }";
+
+            var result = Process(input);
+
+            var expected = "namespace Some.Namespace\r\n" +
+                "{\r\n" +
+                "    using static SomeClass;\r\n" +
+                "}";
+            Assert.AreEqual(expected, result);
+        }
 
         [TestMethod]
         public void ConditionalIsStripped()

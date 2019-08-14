@@ -42,6 +42,7 @@ namespace JoinCSharp
                     into ns
                     select SyntaxFactory
                         .NamespaceDeclaration(SyntaxFactory.ParseName(ns.Key))
+                        .AddUsings(ns.SelectMany(x => x.Usings).ToArray())
                         .AddMembers(ns.SelectMany(x => x.Members).ToArray())
                 )
                 .OfType<MemberDeclarationSyntax>()
