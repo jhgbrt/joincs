@@ -10,10 +10,10 @@
     <PackAsTool>true</PackAsTool>
     <PackageId>Join.CSharp</PackageId>
     <PackageLicenseUrl>https://raw.githubusercontent.com/jhgbrt/joincs/master/LICENSE.txt</PackageLicenseUrl>
-    <PackageProjectUrl>http://github.com/jhgbrt/joincs</PackageProjectUrl>
-    <RepositoryUrl>http://github.com/jhgbrt/joincs</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/jhgbrt/joincs</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jhgbrt/joincs</RepositoryUrl>
     <Authors>Jeroen Haegebaert</Authors>
-    <Title>A for joining a set of .cs files.</Title>
+    <Title>A tool for joining a set of .cs files into one file.</Title>
     <Description>This dotnet core (cli) tool can be used to join a set of .cs files into one big source file. Uses roslyn to parse each input file and ensure correct output.</Description>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
