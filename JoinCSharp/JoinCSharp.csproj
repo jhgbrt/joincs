@@ -9,7 +9,7 @@
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <PackageId>Join.CSharp</PackageId>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/jhgbrt/joincs/master/LICENSE.txt</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/jhgbrt/joincs</PackageProjectUrl>
     <RepositoryUrl>https://github.com/jhgbrt/joincs</RepositoryUrl>
     <Authors>Jeroen Haegebaert</Authors>
