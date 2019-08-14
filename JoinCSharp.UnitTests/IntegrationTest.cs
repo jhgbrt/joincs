@@ -15,6 +15,7 @@ namespace JoinCSharp.UnitTests
                 "#if CONDITIONAL\r\n" +
                 "using Some.ConditionalUsing;\r\n" +
                 "#endif\r\n" +
+                "using static Abc.StaticClass;\r\n" + 
                 "namespace Abc.Def " +
                 "{ \r\n" +
                 "// comment\r\n" +
@@ -51,6 +52,7 @@ namespace JoinCSharp.UnitTests
             string result = sources.Select(s=>s.ReadLines()).Preprocess().Aggregate();
 
             string expectedWithoutConditional =
+                "using static Abc.StaticClass;\r\n" +
                 "using Some.Using1;\r\n" +
                 "using Some.Using2;\r\n" +
                 "using Some.Using3;\r\n" +
@@ -116,6 +118,7 @@ namespace JoinCSharp.UnitTests
 
             // TODO class comments are stripped
             string expectedWithoutConditional =
+                "using static Abc.StaticClass;\r\n" +
                 "using Some.ConditionalUsing;\r\n" +
                 "using Some.Using1;\r\n" +
                 "using Some.Using2;\r\n" +
