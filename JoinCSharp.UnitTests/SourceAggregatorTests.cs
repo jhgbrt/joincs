@@ -1,4 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.IO;
+using System.Linq;
 
 namespace JoinCSharp.UnitTests
 {
@@ -72,7 +74,7 @@ namespace JoinCSharp.UnitTests
             {
                 "using SomeNamespace;\r\n" +
                 "[assembly: SomeAttribute2()]\r\n",
-                "[assembly: SomeAttribute1()]" 
+                "[assembly: SomeAttribute1()]"
             };
 
             var result = input.Aggregate();
@@ -94,7 +96,7 @@ namespace JoinCSharp.UnitTests
 
             var expected = "using Some.Using;\r\n" +
                            "\r\n" +
-                           "namespace Some.Namespace\r\n" + 
+                           "namespace Some.Namespace\r\n" +
                            "{\r\n" +
                            "    class SomeClass\r\n" +
                            "    {\r\n" +
@@ -135,7 +137,7 @@ namespace JoinCSharp.UnitTests
         public void ConditionalIsStripped()
         {
             var input = "#if CONDITIONAL\r\nusing MyUsing;\r\n#endif";
-            var result = Process(input, "CONDITIONAL" );
+            var result = Process(input, "CONDITIONAL");
             Assert.AreEqual("using MyUsing;", result);
         }
 
@@ -151,12 +153,12 @@ namespace JoinCSharp.UnitTests
         [TestMethod]
         public void WhenCompilingWithPreprocessorDirective_ConditionalCodeIsRetained()
         {
-            var input = 
+            var input =
                 "namespace Abc.Def\r\n" +
                 "{\r\n" +
                 "#if CONDITIONAL\r\n" +
                 "   class ConditionalClass{}\r\n" +
-                "#endif\r\n"+
+                "#endif\r\n" +
                 "}";
 
             var result = Process(input, new[] { "CONDITIONAL" });
@@ -210,7 +212,7 @@ namespace JoinCSharp.UnitTests
         [TestMethod]
         public void WhenCompilingWithoutConditionalDirective_ConditionalCodeIsStrippedAway()
         {
-            var input = 
+            var input =
                 "#if CONDITIONAL\r\n" +
                 "using Some.ConditionalUsing;\r\n" +
                 "#endif\r\n" +
@@ -219,7 +221,7 @@ namespace JoinCSharp.UnitTests
                 "{\r\n" +
                 "#if CONDITIONAL\r\n" +
                 "   class ConditionalClass{}\r\n" +
-                "#endif\r\n"+
+                "#endif\r\n" +
                 "}";
 
             var result = Process(input);

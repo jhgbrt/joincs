@@ -29,11 +29,13 @@ namespace JoinCSharp
             {
                 var inputDirectory = new DirectoryInfo(arguments.InputDirectory);
 
-                var subdirs = new[] {"bin", "obj"}.Select(inputDirectory.SubFolder).ToArray();
+                var binobj = new[] {"bin", "obj"}.Select(inputDirectory.SubFolder)
+                    .Select(d => d.FullName)
+                    .ToArray();
 
                 var output = inputDirectory
                     .EnumerateFiles("*.cs", SearchOption.AllDirectories)
-                    .Except(subdirs)
+                    .Where(f => !binobj.Any(d => f.DirectoryName.StartsWith(d)))
                     .WriteLine(Console.Out)
                     .ReadLines()
                     .Preprocess(arguments.PreprocessorDirectives)
