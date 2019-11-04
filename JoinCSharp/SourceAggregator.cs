@@ -8,6 +8,12 @@ namespace JoinCSharp
 {
     public class SourceAggregator
     {
+        private bool _ignoreAssemblyAttributeLists;
+        public SourceAggregator(bool ignoreAssemblyAttributeLists)
+        {
+            _ignoreAssemblyAttributeLists = ignoreAssemblyAttributeLists;
+        }
+
         class UsingComparer : IEqualityComparer<UsingDirectiveSyntax>
         {
             public bool Equals(UsingDirectiveSyntax x, UsingDirectiveSyntax y) => x.Name.ToString().Equals(y.Name.ToString());
@@ -27,7 +33,8 @@ namespace JoinCSharp
             Usings.AddRange(compilationUnit.Usings);
             Namespaces.AddRange(compilationUnit.Members.OfType<NamespaceDeclarationSyntax>());
             Other.AddRange(compilationUnit.Members.Except(Namespaces));
-            AttributeLists.AddRange(compilationUnit.AttributeLists);
+            if (!_ignoreAssemblyAttributeLists)
+                AttributeLists.AddRange(compilationUnit.AttributeLists.Where(al => al.Target.Identifier.Kind() == SyntaxKind.AssemblyKeyword));
             Externs.AddRange(compilationUnit.Externs);
             return this;
         }
@@ -47,10 +54,33 @@ namespace JoinCSharp
                 )
                 .OfType<MemberDeclarationSyntax>()
                 .ToArray();
-            
+
+            var attributeList = AttributeLists.ToArray();
+
+            if (attributeList.Any())
+            {
+                var attributes = 
+                        from al in AttributeLists
+                        from attribute in al.Attributes
+                        orderby attribute.Name.ToString()
+                        select attribute;
+
+                attributeList = new[]
+                {
+                    SyntaxFactory.AttributeList(
+                        new SeparatedSyntaxList<AttributeSyntax>().AddRange(attributes)
+                    )
+                    .WithTarget(SyntaxFactory.AttributeTargetSpecifier(
+                        SyntaxFactory.Token(SyntaxKind.AssemblyKeyword)
+                        )
+                    ) 
+                };
+            }
+
+
             var cs = SyntaxFactory.CompilationUnit()
                 .AddUsings(Usings.Distinct(new UsingComparer()).OrderBy(u => u.Name.ToString()).ToArray())
-                .AddAttributeLists(AttributeLists.OrderBy(a => a.ToString()).ToArray())
+                .AddAttributeLists(attributeList)
                 .AddExterns(Externs.ToArray())
                 .AddMembers(namespaces.ToArray())
                 .AddMembers(Other.ToArray())

@@ -25,6 +25,10 @@ namespace JoinCSharp
                         Errors.Add($"Expected '.cs' as extension for output file, but was {Path.GetExtension(arg)}");
                     }
                 }
+                else if (arg == "--ignoreAssemblyAttributes")
+                {
+                    IgnoreAssemblyAttributes = true;
+                }
                 else
                 {
                     PreprocessorDirectives = arg.Split(',');
@@ -44,6 +48,7 @@ namespace JoinCSharp
         public string InputDirectory { get; }
         public string OutputFile { get; }
         public string[] PreprocessorDirectives { get; } = new string[0];
+        public bool IgnoreAssemblyAttributes { get; }
         public List<string> Errors { get; } = new List<string>();
     }
 }

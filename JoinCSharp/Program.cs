@@ -39,7 +39,7 @@ namespace JoinCSharp
                     .WriteLine(Console.Out)
                     .ReadLines()
                     .Preprocess(arguments.PreprocessorDirectives)
-                    .Aggregate();
+                    .Aggregate(arguments.IgnoreAssemblyAttributes);
 
                 if (!string.IsNullOrEmpty(arguments.OutputFile))
                 {

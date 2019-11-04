@@ -9,7 +9,7 @@ namespace JoinCSharp.UnitTests
     {
         private static string Process(string input, params string[] preprocessorSymbols)
         {
-            return new SourceAggregator().AddSource(input.Preprocess(preprocessorSymbols)).GetResult();
+            return new SourceAggregator(false).AddSource(input.Preprocess(preprocessorSymbols)).GetResult();
         }
 
         [TestMethod]
@@ -66,6 +66,18 @@ namespace JoinCSharp.UnitTests
 
             Assert.AreEqual(expected, result);
         }
+        
+        [TestMethod]
+        public void AssemblyAttributeList()
+        {
+            var input = "using SomeNamespace;\r\n[assembly: SomeAttribute(), MyAttribute()]";
+
+            var result = Process(input);
+
+            var expected = "using SomeNamespace;\r\n\r\n[assembly: MyAttribute(), SomeAttribute()]";
+
+            Assert.AreEqual(expected, result);
+        }
 
         [TestMethod]
         public void MultipleAssemblyAttributes()
@@ -81,8 +93,24 @@ namespace JoinCSharp.UnitTests
 
             var expected = "using SomeNamespace;\r\n" +
                            "\r\n" +
-                           "[assembly: SomeAttribute1()]\r\n" +
-                           "[assembly: SomeAttribute2()]";
+                           "[assembly: SomeAttribute1(), SomeAttribute2()]";
+
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void IgnoreAssemblyAttributes()
+        {
+            var input = new[]
+            {
+                "using SomeNamespace;\r\n" +
+                "[assembly: SomeAttribute2()]\r\n",
+                "[assembly: SomeAttribute1()]"
+            };
+
+            var result = input.Aggregate(true);
+
+            var expected = "using SomeNamespace;";
 
             Assert.AreEqual(expected, result);
         }

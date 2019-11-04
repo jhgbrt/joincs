@@ -52,9 +52,9 @@ namespace JoinCSharp
             return input.Select(ReadLines);
         }
 
-        public static string Aggregate(this IEnumerable<string> sources)
+        public static string Aggregate(this IEnumerable<string> sources, bool ignoreAssemblyAttributeLists = false)
         {
-            return sources.Aggregate(new SourceAggregator(), (p, s) => p.AddSource(s)).GetResult();
+            return sources.Aggregate(new SourceAggregator(ignoreAssemblyAttributeLists), (p, s) => p.AddSource(s)).GetResult();
         }
 
         internal static IEnumerable<string> Preprocess(this IEnumerable<IEnumerable<string>> input, params string[] directives)

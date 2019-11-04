@@ -75,5 +75,12 @@ namespace JoinCSharp.UnitTests
             Assert.AreEqual("somefile.cs", args.OutputFile);
             Assert.AreEqual(Environment.CurrentDirectory, args.InputDirectory);
         }
+        [TestMethod]
+        public void Args_IgnoreAssemblyAttributes()
+        {
+            var args = new Args(new[] { "DEBUG,NETFRAMEWORK", "somefile.cs", Environment.CurrentDirectory, "--ignoreAssemblyAttributes" });
+            Assert.AreEqual(0, args.Errors.Count);
+            Assert.IsTrue(args.IgnoreAssemblyAttributes);
+        }
     }
 }
