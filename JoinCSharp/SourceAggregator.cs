@@ -6,13 +6,10 @@ using System.Linq;
 
 namespace JoinCSharp
 {
-    public class SourceAggregator
+    internal class SourceAggregator
     {
-        private bool _ignoreAssemblyAttributeLists;
-        public SourceAggregator(bool ignoreAssemblyAttributeLists)
-        {
-            _ignoreAssemblyAttributeLists = ignoreAssemblyAttributeLists;
-        }
+        private readonly bool _includeAssemblyAttributes;
+        public SourceAggregator(bool includeAssemblyAttributes) => _includeAssemblyAttributes = includeAssemblyAttributes;
 
         class UsingComparer : IEqualityComparer<UsingDirectiveSyntax>
         {
@@ -20,11 +17,11 @@ namespace JoinCSharp
             public int GetHashCode(UsingDirectiveSyntax obj) => obj.Name.ToString().GetHashCode();
         }
 
-        List<UsingDirectiveSyntax> Usings { get; } = new List<UsingDirectiveSyntax>();
-        List<NamespaceDeclarationSyntax> Namespaces { get; } = new List<NamespaceDeclarationSyntax>();
-        List<MemberDeclarationSyntax> Other { get; } = new List<MemberDeclarationSyntax>();
-        List<AttributeListSyntax> AttributeLists { get; } = new List<AttributeListSyntax>();
-        List<ExternAliasDirectiveSyntax> Externs { get; } = new List<ExternAliasDirectiveSyntax>();
+        List<UsingDirectiveSyntax> Usings { get; } = new();
+        List<NamespaceDeclarationSyntax> Namespaces { get; } = new();
+        List<MemberDeclarationSyntax> Other { get; } = new();
+        List<AttributeListSyntax> AttributeLists { get; } = new();
+        List<ExternAliasDirectiveSyntax> Externs { get; } = new();
 
         public SourceAggregator AddSource(string source)
         {
@@ -33,7 +30,7 @@ namespace JoinCSharp
             Usings.AddRange(compilationUnit.Usings);
             Namespaces.AddRange(compilationUnit.Members.OfType<NamespaceDeclarationSyntax>());
             Other.AddRange(compilationUnit.Members.Except(Namespaces));
-            if (!_ignoreAssemblyAttributeLists)
+            if (_includeAssemblyAttributes)
                 AttributeLists.AddRange(compilationUnit.AttributeLists.Where(al => al.Target.Identifier.Kind() == SyntaxKind.AssemblyKeyword));
             Externs.AddRange(compilationUnit.Externs);
             return this;
@@ -86,7 +83,7 @@ namespace JoinCSharp
                 .AddMembers(Other.ToArray())
                 .NormalizeWhitespace();
 
-            return cs.ToString();
+            return cs.ToFullString();
         }
     }
 }

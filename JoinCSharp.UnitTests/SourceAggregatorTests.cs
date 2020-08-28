@@ -1,18 +1,22 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Xunit;
 
 namespace JoinCSharp.UnitTests
 {
-    [TestClass]
     public class SourceAggregatorTests
     {
         private static string Process(string input, params string[] preprocessorSymbols)
         {
-            return new SourceAggregator(false).AddSource(input.Preprocess(preprocessorSymbols)).GetResult();
+            return new SourceAggregator(true).AddSource(input.Preprocess(preprocessorSymbols)).GetResult();
         }
 
-        [TestMethod]
+        [Fact]
         public void SimpleEnum()
         {
             var input = "enum MyEnum {A, B, C}";
@@ -26,10 +30,10 @@ namespace JoinCSharp.UnitTests
                             "    C\r\n" +
                             "}";
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void SimpleClass()
         {
             var input = "class SomeClass {}";
@@ -40,10 +44,10 @@ namespace JoinCSharp.UnitTests
                             "{\r\n" +
                             "}";
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void ExternAlias()
         {
             var input = "extern alias SomeAlias;";
@@ -52,10 +56,10 @@ namespace JoinCSharp.UnitTests
 
             var expected = "extern alias SomeAlias;";
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void AssemblyAttribute()
         {
             var input = "using SomeNamespace;\r\n[assembly: SomeAttribute()]";
@@ -64,10 +68,10 @@ namespace JoinCSharp.UnitTests
 
             var expected = "using SomeNamespace;\r\n\r\n[assembly: SomeAttribute()]";
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
         
-        [TestMethod]
+        [Fact]
         public void AssemblyAttributeList()
         {
             var input = "using SomeNamespace;\r\n[assembly: SomeAttribute(), MyAttribute()]";
@@ -76,30 +80,11 @@ namespace JoinCSharp.UnitTests
 
             var expected = "using SomeNamespace;\r\n\r\n[assembly: MyAttribute(), SomeAttribute()]";
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void MultipleAssemblyAttributes()
-        {
-            var input = new[]
-            {
-                "using SomeNamespace;\r\n" +
-                "[assembly: SomeAttribute2()]\r\n",
-                "[assembly: SomeAttribute1()]"
-            };
-
-            var result = input.Aggregate();
-
-            var expected = "using SomeNamespace;\r\n" +
-                           "\r\n" +
-                           "[assembly: SomeAttribute1(), SomeAttribute2()]";
-
-            Assert.AreEqual(expected, result);
-        }
-
-        [TestMethod]
-        public void IgnoreAssemblyAttributes()
         {
             var input = new[]
             {
@@ -110,12 +95,31 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Aggregate(true);
 
-            var expected = "using SomeNamespace;";
+            var expected = "using SomeNamespace;\r\n" +
+                           "\r\n" +
+                           "[assembly: SomeAttribute1(), SomeAttribute2()]";
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
-        [TestMethod]
+        [Fact]
+        public void IgnoreAssemblyAttributes()
+        {
+            var input = new[]
+            {
+                "using SomeNamespace;\r\n" +
+                "[assembly: SomeAttribute2()]\r\n",
+                "[assembly: SomeAttribute1()]"
+            };
+
+            var result = input.Aggregate(false);
+
+            var expected = "using SomeNamespace;";
+
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
         public void ClassInNamespaceWithUsing()
         {
             var input = "using Some.Using; namespace Some.Namespace { class SomeClass {} }";
@@ -131,23 +135,23 @@ namespace JoinCSharp.UnitTests
                            "    }\r\n" +
                            "}";
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
-        [TestMethod]
+        [Fact]
         public void TwoSameUsingsAreGrouped()
         {
             var input = "using MyUsing;\r\nusing MyUsing;";
             var result = Process(input);
-            Assert.AreEqual("using MyUsing;", result);
+            Assert.Equal("using MyUsing;", result);
         }
-        [TestMethod]
+        [Fact]
         public void TwoDifferentUsingsAreOrdered()
         {
             var input = "using MyUsing2;\r\nusing MyUsing1;";
             var result = Process(input);
-            Assert.AreEqual("using MyUsing1;\r\nusing MyUsing2;", result);
+            Assert.Equal("using MyUsing1;\r\nusing MyUsing2;", result);
         }
-        [TestMethod]
+        [Fact]
         public void StaticUsingInNamespace()
         {
             var input = "namespace Some.Namespace { using static SomeClass; }";
@@ -158,27 +162,27 @@ namespace JoinCSharp.UnitTests
                 "{\r\n" +
                 "    using static SomeClass;\r\n" +
                 "}";
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void ConditionalIsStripped()
         {
             var input = "#if CONDITIONAL\r\nusing MyUsing;\r\n#endif";
             var result = Process(input, "CONDITIONAL");
-            Assert.AreEqual("using MyUsing;", result);
+            Assert.Equal("using MyUsing;", result);
         }
 
-        [TestMethod]
+        [Fact]
         public void ConditionalIsStrippedFromCode()
         {
             var input = "using MyUsing1;\r\n#if CONDITIONAL\r\nusing MyUsing;\r\n#endif";
             var result = Process(input, "CONDITIONAL");
-            Assert.AreEqual("using MyUsing;\r\nusing MyUsing1;", result);
+            Assert.Equal("using MyUsing;\r\nusing MyUsing1;", result);
         }
 
 
-        [TestMethod]
+        [Fact]
         public void WhenCompilingWithPreprocessorDirective_ConditionalCodeIsRetained()
         {
             var input =
@@ -198,9 +202,9 @@ namespace JoinCSharp.UnitTests
                 "    }\r\n" +
                 "}";
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
-        [TestMethod]
+        [Fact]
         public void SimpleUsing()
         {
             string input = "using Some.Using;";
@@ -208,22 +212,22 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input, new string[] { "CONDITIONAL" });
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void ConditionalUsing_NoPreprocessorSymbols_UsingIsRemoved()
         {
             string input = "#if CONDITIONAL\r\n" +
                 "using Some.Using;\r\n" +
                 "#endif";
 
-            var result = Process(input, new string[] { });
+            var result = Process(input, Array.Empty<string>());
 
-            Assert.AreEqual(string.Empty, result);
+            Assert.Equal(string.Empty, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void ConditionalUsing_WithPreprocessorSymbol_UsingIsMaintained()
         {
             string input = "#if CONDITIONAL\r\n" +
@@ -234,10 +238,10 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input, "CONDITIONAL");
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void WhenCompilingWithoutConditionalDirective_ConditionalCodeIsStrippedAway()
         {
             var input =
@@ -260,19 +264,19 @@ namespace JoinCSharp.UnitTests
                 "{\r\n" +
                 "}";
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
-        [TestMethod]
+        [Fact]
         public void ProcessUsings()
         {
             string input = "using MyUsing1;\r\nusing MyUsing2;";
 
             string result = Process(input);
 
-            Assert.AreEqual("using MyUsing1;\r\nusing MyUsing2;", result);
+            Assert.Equal("using MyUsing1;\r\nusing MyUsing2;", result);
         }
 
-        [TestMethod]
+        [Fact]
         public void ConditionalIsNotStrippedFromCode()
         {
             string input =
@@ -281,12 +285,10 @@ namespace JoinCSharp.UnitTests
         "using MyUsing2;\r\n" +
         "#endif";
             string result = Process(input, "CONDITIONAL");
-            Assert.AreEqual("using MyUsing1;\r\nusing MyUsing2;", result);
+            Assert.Equal("using MyUsing1;\r\nusing MyUsing2;", result);
         }
 
-        // TODO investigate
-        //[TestMethod]
-        //[Ignore("not supported (yet)")]
+        [Fact]
         public void ClassWithComment()
         {
             var input = "// some comment\r\nclass SomeClass {}";
@@ -298,10 +300,10 @@ namespace JoinCSharp.UnitTests
                            "{\r\n" +
                            "}";
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void ConditionalMethod_NoSymbols_MethodIsStripped()
         {
             string input = "class SomeClass {\r\n" +
@@ -318,10 +320,10 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input);
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void ConditionalMethod_WithSymbols_MethodIsNotStripped()
         {
             string input = "class SomeClass {\r\n" +
@@ -346,10 +348,10 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input, "CONDITIONAL2");
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void ConditionalClass_WithDirective_ClassIsStripped()
         {
             string input = "namespace Abc.Def\r\n" +
@@ -368,7 +370,7 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input, new string[] { "CONDITIONAL" });
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
 

@@ -1,11 +1,10 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace JoinCSharp.UnitTests
 {
-    [TestClass]
     public class IntegrationTest
     {
         private static readonly string[] sources = new[]
@@ -46,7 +45,7 @@ namespace JoinCSharp.UnitTests
                 "}"
             };
 
-        [TestMethod]
+        [Fact]
         public void JoinTest_WithoutPreprocessorDirective()
         {
 
@@ -110,10 +109,10 @@ namespace JoinCSharp.UnitTests
             //File.WriteAllText("result.txt", result);
             //File.WriteAllText("expected.txt", expectedWithoutConditional);
             //Process.Start(@"c:\Program Files (x86)\WinMerge\WinMergeU.exe", "result.txt expected.txt");
-            Assert.AreEqual(expectedWithoutConditional, result);
+            Assert.Equal(expectedWithoutConditional, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void JoinTest_WithPreprocessorDirective()
         {
 
@@ -185,7 +184,7 @@ namespace JoinCSharp.UnitTests
             //File.WriteAllText("result.txt", result);
             //File.WriteAllText("expected.txt", expectedWithoutConditional);
             //Process.Start(@"c:\Program Files (x86)\WinMerge\WinMergeU.exe", "result.txt expected.txt");
-            Assert.AreEqual(expectedWithoutConditional, result);
+            Assert.Equal(expectedWithoutConditional, result);
         }
 
     }

@@ -6,26 +6,20 @@ using System.Text;
 
 namespace JoinCSharp
 {
-    public static class Extensions
+    internal static class Extensions
     {
-        public static IEnumerable<FileInfo> Except(this IEnumerable<FileInfo> input, params DirectoryInfo[] folders)
-        {
-            return input.Where(file => !folders.Any(file.SitsBelow));
-        }
+        public static IEnumerable<FileInfo> Except(this IEnumerable<FileInfo> input, params DirectoryInfo[] folders) 
+            => input.Where(file => !folders.Any(file.SitsBelow));
 
-        public static DirectoryInfo SubFolder(this DirectoryInfo root, string sub)
-        {
-            return new DirectoryInfo(Path.Combine(root.FullName, sub));
-        }
+        public static DirectoryInfo SubFolder(this DirectoryInfo root, string sub) 
+            => new(Path.Combine(root.FullName, sub));
 
-        public static bool SitsBelow(this FileInfo file, DirectoryInfo folder)
-        {
-            return file.Directory.Parents().Any(dir => dir.FullName.Equals(folder.FullName));
-        }
+        public static bool SitsBelow(this FileInfo file, DirectoryInfo folder) 
+            => file.Directory.Parents().Any(dir => dir.FullName.Equals(folder.FullName));
 
         public static IEnumerable<DirectoryInfo> Parents(this DirectoryInfo info)
         {
-            DirectoryInfo item = info;
+            var item = info;
             while (item != null)
             {
                 yield return item;
@@ -33,34 +27,17 @@ namespace JoinCSharp
             }
         }
 
-        public static IEnumerable<FileInfo> WriteLine(this IEnumerable<FileInfo> input, TextWriter writer)
-        {
-            foreach (FileInfo f in input)
-            {
-                writer.WriteLine($"Processing: {f.FullName}");
-                yield return f;
-            }
-        }
+        public static IEnumerable<string> ReadLines(this FileInfo file) 
+            => File.ReadLines(file.FullName);
 
-        public static IEnumerable<string> ReadLines(this FileInfo file)
-        {
-            return File.ReadLines(file.FullName);
-        }
+        public static IEnumerable<IEnumerable<string>> ReadLines(this IEnumerable<FileInfo> input) 
+            => input.Select(ReadLines);
 
-        public static IEnumerable<IEnumerable<string>> ReadLines(this IEnumerable<FileInfo> input)
-        {
-            return input.Select(ReadLines);
-        }
+        public static string Aggregate(this IEnumerable<string> sources, bool includeAssemblyAttributes = false) 
+            => sources.Aggregate(new SourceAggregator(includeAssemblyAttributes), (p, s) => p.AddSource(s)).GetResult();
 
-        public static string Aggregate(this IEnumerable<string> sources, bool ignoreAssemblyAttributeLists = false)
-        {
-            return sources.Aggregate(new SourceAggregator(ignoreAssemblyAttributeLists), (p, s) => p.AddSource(s)).GetResult();
-        }
-
-        internal static IEnumerable<string> Preprocess(this IEnumerable<IEnumerable<string>> input, params string[] directives)
-        {
-            return input.Select(x => x.Preprocess(directives));
-        }
+        internal static IEnumerable<string> Preprocess(this IEnumerable<IEnumerable<string>> input, params string[] directives) 
+            => input.Select(x => x.Preprocess(directives));
 
         private enum State
         {
@@ -69,7 +46,7 @@ namespace JoinCSharp
             KeepingIfDirective
         }
 
-        internal static bool ParseDirective(this ReadOnlySpan<char> line, out (bool not, string symbol) result)
+        static bool ParseDirective(this ReadOnlySpan<char> line, out (bool not, string symbol) result)
         {
             result = (false, string.Empty);
             if (!line.StartsWith("#if "))
@@ -84,38 +61,33 @@ namespace JoinCSharp
                 index = 2;
             }
 
-            string symbol = new string(line.Slice(index + 1).Trim());
+            string symbol = new(line[(index + 1)..].Trim());
             result = (not, symbol);
 
             return !string.IsNullOrEmpty(symbol);
         }
 
-        internal static bool IsEndIfDirective(this ReadOnlySpan<char> line)
-        {
-            return line.TrimStart().StartsWith("#endif");
-        }
+        static bool IsEndIfDirective(this ReadOnlySpan<char> line) 
+            => line.TrimStart().StartsWith("#endif");
 
-        internal static bool IsElseDirective(this ReadOnlySpan<char> line)
-        {
-            return line.TrimStart().StartsWith("#else");
-        }
+        static bool IsElseDirective(this ReadOnlySpan<char> line) 
+            => line.TrimStart().StartsWith("#else");
 
         internal static string Preprocess(this IEnumerable<string> input, params string[] directives)
         {
-            StringBuilder sb = new StringBuilder();
-            State state = State.OutsideIfDirective;
+            var sb = new StringBuilder();
+            var state = State.OutsideIfDirective;
             foreach (string line in input)
             {
                 switch (state)
                 {
                     case State.OutsideIfDirective:
                         {
-                            ReadOnlySpan<char> span = line.AsSpan().TrimStart();
-                            if (span.ParseDirective(out (bool not, string symbol) result))
+                            var span = line.AsSpan().TrimStart();
+                            if (span.ParseDirective(out (bool, string) result))
                             {
                                 (bool not, string symbol) = result;
-                                var codeShouldBeIncluded = directives.Any(directive => symbol == directive) 
-                                    ? !not : not;
+                                var codeShouldBeIncluded = directives.Any(directive => symbol == directive) ? !not : not;
                                 state = codeShouldBeIncluded ? State.KeepingIfDirective: State.SkippingIfDirective;
                             }
                             else
@@ -165,12 +137,10 @@ namespace JoinCSharp
 
         internal static IEnumerable<string> ReadLines(this string input)
         {
-            using (StringReader reader = new StringReader(input))
+            using StringReader reader = new(input);
+            while (reader.Peek() >= 0)
             {
-                while (reader.Peek() >= 0)
-                {
-                    yield return reader.ReadLine();
-                }
+                yield return reader.ReadLine();
             }
         }
     }

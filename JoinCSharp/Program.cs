@@ -3,61 +3,55 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using JoinCSharp;
 
 [assembly: InternalsVisibleTo("JoinCSharp.UnitTests")]
 
-namespace JoinCSharp
+static class Program
 {
-    class Program
+    /// <summary>
+    /// A command line tool to merge a set of C# files into one single file.
+    /// </summary>
+    /// <param name="input">The folder containing the C# files you want to merge</param>
+    /// <param name="output">Target file name (e.g. 'output.cs'). If not provided, the output is written to the console.</param>
+    /// <param name="includeAssemblyAttributes"></param>
+    /// <param name="preprocessorDirectives">A list of preprocessor directives that should be defined. Code between undefined #if/#endif directives is ignored.</param>
+    /// <returns></returns>
+    public static async Task<int> Main(DirectoryInfo input, FileInfo output = null, bool includeAssemblyAttributes = false, string[] preprocessorDirectives = null)
     {
-        static async Task<int> Main(string[] args)
+        if (input == null)
         {
-            var arguments = new Args(args);
-
-            if (arguments.Errors.Any())
-            {
-                foreach (var error in arguments.Errors)
-                {
-                    await Console.Error.WriteLineAsync(error);
-                }
-                await Console.Out.WriteLineAsync(
-                    "usage: joincs inputfolder [outputfile] [PREPROCESSOR_DIRECTIVE_1,PREPROCESSOR_DIRECTIVE_2,...]");
-                return 1;
-            }
-
-            try
-            {
-                var inputDirectory = new DirectoryInfo(arguments.InputDirectory);
-
-                var binobj = new[] {"bin", "obj"}.Select(inputDirectory.SubFolder)
-                    .Select(d => d.FullName)
-                    .ToArray();
-
-                var output = inputDirectory
-                    .EnumerateFiles("*.cs", SearchOption.AllDirectories)
-                    .Where(f => !binobj.Any(d => f.DirectoryName.StartsWith(d)))
-                    .WriteLine(Console.Out)
-                    .ReadLines()
-                    .Preprocess(arguments.PreprocessorDirectives)
-                    .Aggregate(arguments.IgnoreAssemblyAttributes);
-
-                if (!string.IsNullOrEmpty(arguments.OutputFile))
-                {
-                    Console.WriteLine($"Writing result to {new FileInfo(arguments.OutputFile).FullName}");
-                    await File.WriteAllTextAsync(arguments.OutputFile, output);
-                }
-                else
-                {
-                    await Console.Out.WriteAsync(output);
-                }
-
-                return 0;
-            }
-            catch (Exception e)
-            {
-                await Console.Error.WriteLineAsync(e.Message);
-                return 1;
-            }
+            Console.Error.WriteLine("input folder is required");
+            return 1;
         }
+        if (!input.Exists)
+        {
+            Console.Error.WriteLine("input folder does not exist");
+            return 1;
+        }
+
+        preprocessorDirectives ??= Array.Empty<string>();
+
+        var binobj = new[] { "bin", "obj" }.Select(input.SubFolder)
+            .Select(d => d.FullName)
+            .ToArray();
+
+        var result = input
+            .EnumerateFiles("*.cs", SearchOption.AllDirectories)
+            .Where(f => !binobj.Any(d => f.DirectoryName.StartsWith(d)))
+            .ReadLines()
+            .Preprocess(preprocessorDirectives)
+            .Aggregate(includeAssemblyAttributes);
+
+        if (output != null)
+        {
+            await File.WriteAllTextAsync(output.FullName, result);
+        }
+        else
+        {
+            await Console.Out.WriteAsync(result);
+        }
+
+        return 0;
     }
 }

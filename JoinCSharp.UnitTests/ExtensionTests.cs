@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace JoinCSharp.UnitTests
 {
@@ -13,39 +13,38 @@ namespace JoinCSharp.UnitTests
             return s.ReadLines().Preprocess(directives);
         }
     }
-    [TestClass]
     public class ExtensionTests
     {
-        [TestMethod]
+        [Fact]
         public void IsBelow_FileInFolder_True()
         {
             var fileInfo = new FileInfo(@"C:\Users\Joe\tmp.txt");
             var root = new DirectoryInfo(@"C:\Users\Joe");
-            Assert.IsTrue(fileInfo.SitsBelow(root));
+            Assert.True(fileInfo.SitsBelow(root));
         }
-        [TestMethod]
+        [Fact]
         public void IsBelow_FileInFolderBelow_True()
         {
             var fileInfo = new FileInfo(@"C:\Users\Joe\tmp.txt");
             var root = new DirectoryInfo(@"C:\Users");
-            Assert.IsTrue(fileInfo.SitsBelow(root));
+            Assert.True(fileInfo.SitsBelow(root));
         }
-        [TestMethod]
+        [Fact]
         public void IsBelow_FileInRootFolderBelow_True()
         {
             var fileInfo = new FileInfo(@"C:\Users\Joe\tmp.txt");
             var root = new DirectoryInfo(@"C:\");
-            Assert.IsTrue(fileInfo.SitsBelow(root));
+            Assert.True(fileInfo.SitsBelow(root));
         }
-        [TestMethod]
+        [Fact]
         public void IsBelow_FileOtherFolderBelow_False()
         {
             var fileInfo = new FileInfo(@"C:\Users\Joe\tmp.txt");
             var root = new DirectoryInfo(@"C:\Users\Jane");
-            Assert.IsFalse(fileInfo.SitsBelow(root));
+            Assert.False(fileInfo.SitsBelow(root));
         }
 
-        [TestMethod]
+        [Fact]
         public void Except_FiltersFileInSubfolders()
         {
             var input = new[]
@@ -70,63 +69,51 @@ namespace JoinCSharp.UnitTests
                 @"C:\A\AE\AAF.txt",
             };
 
-            CollectionAssert.AreEqual(expected, result.Select(f => f.FullName).ToArray());
+            Assert.Equal(expected, result.Select(f => f.FullName).ToArray());
         }
 
-        [TestMethod]
-        public void WriteLine_WritesNameToTextWriter()
-        {
-            var fileInfos = new[] {@"C:\A\B\C.txt"}.Select(s => new FileInfo(s));
-            var sb = new StringBuilder();
-            using (var writer = new StringWriter(sb))
-            {
-                fileInfos = fileInfos.WriteLine(writer).ToList();
-            }
-            Assert.AreEqual(@"Processing: C:\A\B\C.txt" + Environment.NewLine, sb.ToString());
-        }
-
-        [TestMethod]
+        [Fact]
         public void Preprocess_Empty_Remains()
         {
-            Assert.AreEqual(string.Empty, string.Empty.Preprocess());
+            Assert.Equal(string.Empty, string.Empty.Preprocess());
         }
-        [TestMethod]
+        [Fact]
         public void Preprocess_OnlyConditional_BecomesEmpty()
         {
-            Assert.AreEqual(string.Empty, "#if WHATEVER\r\n#endif".Preprocess());
+            Assert.Equal(string.Empty, "#if WHATEVER\r\n#endif".Preprocess());
         }
-        [TestMethod]
+        [Fact]
         public void Preprocess_AdditionalWhitespace_BecomesEmpty()
         {
-            Assert.AreEqual(string.Empty, "   #if   WHATEVER\t \r\n\t #endif".Preprocess());
+            Assert.Equal(string.Empty, "   #if   WHATEVER\t \r\n\t #endif".Preprocess());
         }
-        [TestMethod]
+        [Fact]
         public void Preprocess_AdditionalWhitespace_Negative_BecomesEmpty()
         {
-            Assert.AreEqual(string.Empty, "   #if   !WHATEVER\t \r\n\t #endif".Preprocess());
+            Assert.Equal(string.Empty, "   #if   !WHATEVER\t \r\n\t #endif".Preprocess());
         }
-        [TestMethod]
+        [Fact]
         public void Preprocess_NoWhitespace_Negative_BecomesEmpty()
         {
-            Assert.AreEqual(string.Empty, "#if !WHATEVER\t \r\n\t #endif".Preprocess());
+            Assert.Equal(string.Empty, "#if !WHATEVER\t \r\n\t #endif".Preprocess());
         }
-        [TestMethod]
+        [Fact]
         public void Preprocess_InvalidDirective_NotTouched()
         {
-            Assert.AreEqual("#if\r\n#endif", "#if\r\n#endif".Preprocess());
+            Assert.Equal("#if\r\n#endif", "#if\r\n#endif".Preprocess());
         }
-        [TestMethod]
+        [Fact]
         public void Preprocess_InvalidNegativeDirective_NotTouched()
         {
-            Assert.AreEqual("#if !\r\n#endif", "#if !\r\n#endif".Preprocess());
+            Assert.Equal("#if !\r\n#endif", "#if !\r\n#endif".Preprocess());
         }
-        [TestMethod]
+        [Fact]
         public void Preprocess_InvalidNegativeDirective2_NotTouched()
         {
-            Assert.AreEqual("#if!\r\n#endif", "#if!\r\n#endif".Preprocess());
+            Assert.Equal("#if!\r\n#endif", "#if!\r\n#endif".Preprocess());
         }
 
-        [TestMethod]
+        [Fact]
         public void Preprocess_NoConditionals_Remains()
         {
             string input = "class SomeClass {\r\n" +
@@ -140,9 +127,9 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess();
 
-            Assert.AreEqual(input, result);
+            Assert.Equal(input, result);
         }
-        [TestMethod]
+        [Fact]
         public void Preprocess_WithConditionals_Stripped()
         {
             string input = "class SomeClass {\r\n" +
@@ -164,9 +151,9 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess();
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
-        [TestMethod]
+        [Fact]
         public void Preprocess_WithNegativeConditionals_Stripped()
         {
             string input = "class SomeClass {\r\n" +
@@ -191,10 +178,10 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess();
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void Preprocess_WithNegativeConditionals_ConditionalSpecifed_NotStripped()
         {
             string input = "class SomeClass {\r\n" +
@@ -216,11 +203,11 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess("CONDITIONAL");
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
 
-        [TestMethod]
+        [Fact]
         public void Preprocess_WithConditionals_DirectiveSpecified_Retained()
         {
             string input = "class SomeClass {\r\n" +
@@ -245,10 +232,10 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess("CONDITIONAL");
 
-            Assert.AreEqual(expected, result);
+            Assert.Equal(expected, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void Preprocess_IfElse()
         {
             var input = "#if DEBUG\r\n" +
@@ -259,9 +246,9 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess("RELEASE");
 
-            Assert.AreEqual("RELEASE", result);
+            Assert.Equal("RELEASE", result);
         }
-        [TestMethod]
+        [Fact]
         public void Preprocess_IfElse_2()
         {
             var input = "#if DEBUG\r\n" +
@@ -272,7 +259,7 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess("DEBUG");
 
-            Assert.AreEqual("DEBUG", result);
+            Assert.Equal("DEBUG", result);
         }
     }
 }
