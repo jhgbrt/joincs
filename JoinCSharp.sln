@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30404.54
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JoinCSharp", "JoinCSharp\JoinCSharp.csproj", "{794F8374-DF0F-4353-B1AF-263B144D6F32}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoinCSharp", "JoinCSharp\JoinCSharp.csproj", "{794F8374-DF0F-4353-B1AF-263B144D6F32}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JoinCSharp.UnitTests", "JoinCSharp.UnitTests\JoinCSharp.UnitTests.csproj", "{3C79953E-43F1-452F-9C11-09622DE2AEB2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoinCSharp.UnitTests", "JoinCSharp.UnitTests\JoinCSharp.UnitTests.csproj", "{3C79953E-43F1-452F-9C11-09622DE2AEB2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +24,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {82773930-F662-415F-BD5B-03FEE586A5D4}
 	EndGlobalSection
 EndGlobal

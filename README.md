@@ -14,10 +14,19 @@ The tool can be installed from nuget as a .Net Core global tool as follows:
 
 ## Usage
 
-    joincs inputfolder [outputfile] [<comma-separated list of preprocessor directives>]
+    joincs:
+      A command line tool to merge a set of C# files into one single file.
+
+    Usage:
+      joincs [options]
+
+    Options:
+      --input <input>                                        The folder containing the C# files you want to merge
+      --output <output>                                      Target file name (e.g. 'output.cs'). If not provided, the output is written to the console. [default: ]
+      --include-assembly-attributes                          [default: False]
+      --preprocessor-directives <preprocessor-directives>    A list of preprocessor directives that should be defined. Code between undefined #if/#endif directives is ignored. [default: ]
+      --version                                              Show version information
+      -?, -h, --help                                         Show help and usage information
 
 If no output file is specified, the result is written to the console.
 
-## Known issues
-
-Preprocessor directives and comments are stripped from using statements, namespaces and top-level class definitions.
