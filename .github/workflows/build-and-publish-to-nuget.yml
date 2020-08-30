@@ -1,11 +1,8 @@
-name: .NET Core
+name: Build and Publish
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
+  workflow_dispatch
+  
 jobs:
   build:
 
@@ -16,13 +13,13 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.301
+        dotnet-version: 5.0.100-preview.8.20417.9
     - name: Install dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test --no-build --configuration Release --verbosity normal
     - name: Publish NuGet
       # You may pin to the exact commit or the version.
       # uses: brandedoutcast/publish-nuget@c12b8546b67672ee38ac87bea491ac94a587f7cc

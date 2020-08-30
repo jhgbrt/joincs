@@ -15,3 +15,5 @@ jobs:
         dotnet-version: 5.0.100-preview.8.20417.9
     - name: Build with dotnet
       run: dotnet build --configuration Release
+    - name: Test
+      run: dotnet test --no-build
