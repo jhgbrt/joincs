@@ -11,11 +11,12 @@ namespace JoinCSharp
         private readonly bool _includeAssemblyAttributes;
         public SourceAggregator(bool includeAssemblyAttributes) => _includeAssemblyAttributes = includeAssemblyAttributes;
 
-        class UsingComparer : IEqualityComparer<UsingDirectiveSyntax>
+        class ByNameUsingComparer : IEqualityComparer<UsingDirectiveSyntax>
         {
             public bool Equals(UsingDirectiveSyntax x, UsingDirectiveSyntax y) => x.Name.ToString().Equals(y.Name.ToString());
             public int GetHashCode(UsingDirectiveSyntax obj) => obj.Name.ToString().GetHashCode();
         }
+        static ByNameUsingComparer UsingComparer = new ();
 
         List<UsingDirectiveSyntax> Usings { get; } = new();
         List<NamespaceDeclarationSyntax> Namespaces { get; } = new();
@@ -76,7 +77,7 @@ namespace JoinCSharp
 
 
             var cs = SyntaxFactory.CompilationUnit()
-                .AddUsings(Usings.Distinct(new UsingComparer()).OrderBy(u => u.Name.ToString()).ToArray())
+                .AddUsings(Usings.Distinct(UsingComparer).OrderBy(u => u.Name.ToString()).ToArray())
                 .AddAttributeLists(attributeList)
                 .AddExterns(Externs.ToArray())
                 .AddMembers(namespaces.ToArray())

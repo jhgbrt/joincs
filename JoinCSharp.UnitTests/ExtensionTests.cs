@@ -10,7 +10,7 @@ namespace JoinCSharp.UnitTests
     {
         public static string Preprocess(this string s, params string[] directives)
         {
-            return s.ReadLines().Preprocess(directives);
+            return string.Join(Environment.NewLine, s.ReadLines().Preprocess(directives));
         }
     }
     public class ExtensionTests

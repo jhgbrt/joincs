@@ -108,7 +108,7 @@ namespace JoinCSharp.UnitTests
                 "}";
             //File.WriteAllText("result.txt", result);
             //File.WriteAllText("expected.txt", expectedWithoutConditional);
-            //Process.Start(@"c:\Program Files (x86)\WinMerge\WinMergeU.exe", "result.txt expected.txt");
+            //Process.Start(@"c:\Program Files\WinMerge\WinMergeU.exe", "result.txt expected.txt");
             Assert.Equal(expectedWithoutConditional, result);
         }
 
