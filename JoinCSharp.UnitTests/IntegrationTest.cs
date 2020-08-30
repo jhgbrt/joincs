@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -49,9 +50,9 @@ namespace JoinCSharp.UnitTests
         public void JoinTest_WithoutPreprocessorDirective()
         {
 
-            string result = sources.Select(s=>s.ReadLines()).Preprocess().Aggregate();
+            string result = sources.Select(s => s.ReadLines()).Preprocess().Aggregate();
 
-            string expectedWithoutConditional =
+            string expected =
                 "using static Abc.StaticClass;\r\n" +
                 "using Some.Using1;\r\n" +
                 "using Some.Using2;\r\n" +
@@ -106,11 +107,11 @@ namespace JoinCSharp.UnitTests
                 "        return null;\r\n" +
                 "    }\r\n" +
                 "}";
-            //File.WriteAllText("result.txt", result);
-            //File.WriteAllText("expected.txt", expectedWithoutConditional);
-            //Process.Start(@"c:\Program Files\WinMerge\WinMergeU.exe", "result.txt expected.txt");
-            Assert.Equal(expectedWithoutConditional, result);
+
+            ShowInteractiveDiffIfDifferent(result, expected);
+            Assert.Equal(expected, result);
         }
+
 
         [Fact]
         public void JoinTest_WithPreprocessorDirective()
@@ -118,8 +119,7 @@ namespace JoinCSharp.UnitTests
 
             string result = sources.Select(s => s.ReadLines()).Preprocess("CONDITIONAL").Aggregate();
 
-            // TODO class comments are stripped
-            string expectedWithoutConditional =
+            string expected =
                 "using static Abc.StaticClass;\r\n" +
                 "using Some.ConditionalUsing;\r\n" +
                 "using Some.Using1;\r\n" +
@@ -181,10 +181,30 @@ namespace JoinCSharp.UnitTests
                 "        return null;\r\n" +
                 "    }\r\n" +
                 "}";
-            //File.WriteAllText("result.txt", result);
-            //File.WriteAllText("expected.txt", expectedWithoutConditional);
-            //Process.Start(@"c:\Program Files (x86)\WinMerge\WinMergeU.exe", "result.txt expected.txt");
-            Assert.Equal(expectedWithoutConditional, result);
+
+            ShowInteractiveDiffIfDifferent(result, expected);
+            Assert.Equal(expected, result);
+        }
+
+        static Lazy<string> winmerge = new Lazy<string>(() => new[]
+            {
+                @"c:\Program Files\WinMerge\WinMergeU.exe",
+                @"c:\Program Files (x 86)\WinMerge\WinMergeU.exe",
+                "WinMergeU.exe"
+            }.FirstOrDefault(File.Exists));
+
+        private void ShowInteractiveDiffIfDifferent(string result, string expected)
+        {
+            if (!Environment.MachineName.StartsWith("DESKTOP"))
+                return;
+
+            if (!string.IsNullOrEmpty(winmerge.Value) && result != expected)
+            {
+                File.WriteAllText("result.txt", result);
+                File.WriteAllText("expected.txt", expected);
+                Process.Start(winmerge.Value, "result.txt expected.txt");
+            }
+
         }
 
     }

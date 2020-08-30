@@ -38,7 +38,7 @@ namespace JoinCSharp
             => sources.Aggregate(new SourceAggregator(includeAssemblyAttributes), (p, s) => p.AddSource(s)).GetResult();
 
         internal static IEnumerable<string> Preprocess(this IEnumerable<IEnumerable<string>> input, params string[] directives) 
-            => input.Select(x => x.Preprocess(directives));
+            => input.Select(x => string.Join(Environment.NewLine, x.Preprocess(directives)));
 
         internal enum State
         {
@@ -47,11 +47,11 @@ namespace JoinCSharp
             KeepingIfDirective
         }
 
-        static bool ParseDirective(this ReadOnlySpan<char> line, out (bool not, string symbol) result)
+        static bool TryParseIfDirective(this ReadOnlySpan<char> line, out IfDirective result)
         {
-            result = (false, string.Empty);
             if (!line.StartsWith("#if "))
             {
+                result = default;
                 return false;
             }
 
@@ -63,7 +63,7 @@ namespace JoinCSharp
             }
 
             string symbol = new(line[(index + 1)..].Trim());
-            result = (not, symbol);
+            result = new(not, symbol);
 
             return !string.IsNullOrEmpty(symbol);
         }
@@ -74,9 +74,10 @@ namespace JoinCSharp
         static bool IsElseDirective(this ReadOnlySpan<char> line) 
             => line.TrimStart().StartsWith("#else");
 
-        internal static string Preprocess(this IEnumerable<string> input, params string[] directives)
+        record IfDirective(bool Not, string Symbol);
+
+        internal static IEnumerable<string> Preprocess(this IEnumerable<string> input, params string[] directives)
         {
-            var sb = new StringBuilder();
             var state = OutsideIfDirective;
             foreach (string line in input)
             {
@@ -86,7 +87,7 @@ namespace JoinCSharp
                     case OutsideIfDirective:
                         {
                             span = span.TrimStart();
-                            if (span.ParseDirective(out (bool, string) result))
+                            if (span.TryParseIfDirective(out IfDirective result))
                             {
                                 (bool not, string symbol) = result;
                                 var codeShouldBeIncluded = directives.Any(directive => symbol == directive) ? !not : not;
@@ -94,7 +95,7 @@ namespace JoinCSharp
                             }
                             else
                             {
-                                sb.AppendLine(line);
+                                yield return line;
                             }
                             break;
                         }
@@ -110,7 +111,7 @@ namespace JoinCSharp
                             }
                             else
                             {
-                                sb.AppendLine(line);
+                                yield return line;
                             }
 
                             break;
@@ -129,12 +130,6 @@ namespace JoinCSharp
                         }
                 }
             }
-
-            if (sb.Length > Environment.NewLine.Length)
-            {
-                sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length);
-            }
-            return sb.ToString();
         }
 
         internal static IEnumerable<string> ReadLines(this string input)
