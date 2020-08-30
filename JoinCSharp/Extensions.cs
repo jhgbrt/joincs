@@ -30,7 +30,7 @@ namespace JoinCSharp
         public static IEnumerable<IEnumerable<string>> ReadLines(this IEnumerable<FileInfo> input) 
             => input.Select(f => File.ReadLines(f.FullName));
 
-        public static string Aggregate(this IEnumerable<string> sources, bool includeAssemblyAttributes = false) 
+        public static string Aggregate(this IEnumerable<string> sources, bool includeAssemblyAttributes = false)
             => sources.Aggregate(new SourceAggregator(includeAssemblyAttributes), (p, s) => p.AddSource(s)).GetResult();
 
         internal static IEnumerable<string> Preprocess(this IEnumerable<IEnumerable<string>> input, params string[] directives) 

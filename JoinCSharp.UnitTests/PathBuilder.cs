@@ -1,34 +1,61 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 
 namespace JoinCSharp.UnitTests
 {
-    class PathBuilder
+    abstract class PathBuilder
     {
-        private List<string> _folders = new();
-        private string? _file = null;
-        public static PathBuilder FromRoot()
+        public static PathBuilder FromRoot() => new DirectoryPathBuilder(Path.DirectorySeparatorChar.ToString());
+        public static PathBuilder Directory(params string[] folderPath) => new DirectoryPathBuilder(folderPath);
+        public static PathBuilder File(params string[] fullPath) => fullPath.Length >= 1
+            ? new FilePathBuilder(fullPath.Take(fullPath.Length - 1), fullPath.Last())
+            : new FilePathBuilder(Enumerable.Empty<string>(), string.Empty);
+
+        public abstract PathBuilder WithSubFolders(params string[] folders);
+        public abstract PathBuilder WithFileName(string fileName);
+
+        public override string ToString() => FullName;
+        public string FullName => FileSystemInfo.FullName;
+        public abstract FileInfo FileInfo { get; }
+        public abstract DirectoryInfo DirectoryInfo { get; }
+        public abstract FileSystemInfo FileSystemInfo { get; }
+
+        class DirectoryPathBuilder : PathBuilder
         {
-            return new PathBuilder().WithSubFolders(Path.DirectorySeparatorChar.ToString());
+            private readonly ReadOnlyCollection<string> _folders;
+
+            internal DirectoryPathBuilder(IEnumerable<string> folders) => _folders = folders.ToList().AsReadOnly();
+            internal DirectoryPathBuilder(params string[] folders) => _folders = folders.ToList().AsReadOnly();
+
+            public override PathBuilder WithSubFolders(params string[] folders) => new DirectoryPathBuilder(_folders.Concat(folders));
+            public override PathBuilder WithFileName(string fileName) => new FilePathBuilder(_folders, fileName);
+
+            public override FileInfo FileInfo => throw new InvalidOperationException("Not a file");
+            public override DirectoryInfo DirectoryInfo => new DirectoryInfo(Path.Combine(_folders.ToArray()));
+            public override FileSystemInfo FileSystemInfo => DirectoryInfo;
         }
-        public PathBuilder WithSubFolders(params string[] folders)
+
+        class FilePathBuilder : PathBuilder
         {
-            _folders.AddRange(folders);
-            return this;
+            private readonly ReadOnlyCollection<string> _folders;
+            private readonly string _file;
+
+            internal FilePathBuilder(IEnumerable<string> folders, string file)
+            {
+                _folders = folders.ToList().AsReadOnly();
+                _file = file;
+            }
+
+            public override PathBuilder WithSubFolders(params string[] folders) => new FilePathBuilder(_folders.Concat(folders), _file);
+            public override PathBuilder WithFileName(string fileName) => new FilePathBuilder(_folders, fileName);
+
+            public override FileInfo FileInfo => !string.IsNullOrEmpty(_file) ? new FileInfo(Path.Combine(_folders.Append(_file).ToArray())) : throw new InvalidOperationException("Path does not have filename");
+            public override DirectoryInfo DirectoryInfo => FileInfo.Directory;
+            public override FileSystemInfo FileSystemInfo => FileInfo;
         }
-        public PathBuilder WithFileName(string fileName)
-        {
-            _file = fileName;
-            return this;
-        }
-        public override string ToString()
-        {
-            return FullPath;
-        }
-        public string FullPath => Path.Combine(_folders.Append(_file).ToArray());
-        public FileInfo FileInfo => !string.IsNullOrEmpty(_file) ? new FileInfo(Path.Combine(_folders.Append(_file).ToArray())) : throw new InvalidOperationException("Path does not have filename");
-        public DirectoryInfo DirectoryInfo  => string.IsNullOrEmpty(_file) ? new DirectoryInfo(Path.Combine(_folders.ToArray())) : throw new InvalidOperationException("Path is a filename");
+
     }
 }
