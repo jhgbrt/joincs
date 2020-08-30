@@ -13,7 +13,7 @@ namespace JoinCSharp
 
         class ByNameUsingComparer : IEqualityComparer<UsingDirectiveSyntax>
         {
-            public bool Equals(UsingDirectiveSyntax x, UsingDirectiveSyntax y) => x.Name.ToString().Equals(y.Name.ToString());
+            public bool Equals(UsingDirectiveSyntax? x, UsingDirectiveSyntax? y) => Equals(x?.Name.ToString(), y?.Name.ToString());
             public int GetHashCode(UsingDirectiveSyntax obj) => obj.Name.ToString().GetHashCode();
         }
         static ByNameUsingComparer UsingComparer = new ();
@@ -32,7 +32,7 @@ namespace JoinCSharp
             Namespaces.AddRange(compilationUnit.Members.OfType<NamespaceDeclarationSyntax>());
             Other.AddRange(compilationUnit.Members.Except(Namespaces));
             if (_includeAssemblyAttributes)
-                AttributeLists.AddRange(compilationUnit.AttributeLists.Where(al => al.Target.Identifier.Kind() == SyntaxKind.AssemblyKeyword));
+                AttributeLists.AddRange(compilationUnit.AttributeLists.Where(al => al.Target?.Identifier.Kind() == SyntaxKind.AssemblyKeyword));
             Externs.AddRange(compilationUnit.Externs);
             return this;
         }

@@ -204,7 +204,6 @@ namespace JoinCSharp.UnitTests
                 File.WriteAllText("expected.txt", expected);
                 Process.Start(winmerge.Value, "result.txt expected.txt");
             }
-
         }
 
     }

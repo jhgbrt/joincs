@@ -17,7 +17,7 @@ static class Program
     /// <param name="includeAssemblyAttributes"></param>
     /// <param name="preprocessorDirectives">A list of preprocessor directives that should be defined. Code between undefined #if/#endif directives is ignored.</param>
     /// <returns></returns>
-    public static async Task<int> Main(DirectoryInfo input, FileInfo output = null, bool includeAssemblyAttributes = false, string[] preprocessorDirectives = null)
+    public static async Task<int> Main(DirectoryInfo input, FileInfo? output = null, bool includeAssemblyAttributes = false, string[]? preprocessorDirectives = null)
     {
         if (input == null)
         {
@@ -38,7 +38,7 @@ static class Program
 
         var result = input
             .EnumerateFiles("*.cs", SearchOption.AllDirectories)
-            .Where(f => !binobj.Any(d => f.DirectoryName.StartsWith(d)))
+            .Where(f => !binobj.Any(d => f.DirectoryName?.StartsWith(d) ?? false))
             .ReadLines()
             .Preprocess(preprocessorDirectives)
             .Aggregate(includeAssemblyAttributes);
