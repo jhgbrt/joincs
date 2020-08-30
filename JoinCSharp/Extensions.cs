@@ -6,6 +6,7 @@ using System.Text;
 
 namespace JoinCSharp
 {
+    using static Extensions.State;
     internal static class Extensions
     {
         public static IEnumerable<FileInfo> Except(this IEnumerable<FileInfo> input, params DirectoryInfo[] folders) 
@@ -39,7 +40,7 @@ namespace JoinCSharp
         internal static IEnumerable<string> Preprocess(this IEnumerable<IEnumerable<string>> input, params string[] directives) 
             => input.Select(x => x.Preprocess(directives));
 
-        private enum State
+        internal enum State
         {
             OutsideIfDirective,
             SkippingIfDirective,
@@ -76,19 +77,20 @@ namespace JoinCSharp
         internal static string Preprocess(this IEnumerable<string> input, params string[] directives)
         {
             var sb = new StringBuilder();
-            var state = State.OutsideIfDirective;
+            var state = OutsideIfDirective;
             foreach (string line in input)
             {
+                var span = line.AsSpan();
                 switch (state)
                 {
-                    case State.OutsideIfDirective:
+                    case OutsideIfDirective:
                         {
-                            var span = line.AsSpan().TrimStart();
+                            span = span.TrimStart();
                             if (span.ParseDirective(out (bool, string) result))
                             {
                                 (bool not, string symbol) = result;
                                 var codeShouldBeIncluded = directives.Any(directive => symbol == directive) ? !not : not;
-                                state = codeShouldBeIncluded ? State.KeepingIfDirective: State.SkippingIfDirective;
+                                state = codeShouldBeIncluded ? KeepingIfDirective : SkippingIfDirective;
                             }
                             else
                             {
@@ -96,15 +98,15 @@ namespace JoinCSharp
                             }
                             break;
                         }
-                    case State.KeepingIfDirective:
+                    case KeepingIfDirective:
                         {
-                            if (line.AsSpan().IsEndIfDirective())
+                            if (span.IsEndIfDirective())
                             {
-                                state = State.OutsideIfDirective;
+                                state = OutsideIfDirective;
                             }
-                            else if (line.AsSpan().IsElseDirective())
+                            else if (span.IsElseDirective())
                             {
-                                state = State.SkippingIfDirective;
+                                state = SkippingIfDirective;
                             }
                             else
                             {
@@ -113,15 +115,15 @@ namespace JoinCSharp
 
                             break;
                         }
-                    case State.SkippingIfDirective:
+                    case SkippingIfDirective:
                         {
-                            if (line.AsSpan().IsEndIfDirective())
+                            if (span.IsEndIfDirective())
                             {
-                                state = State.OutsideIfDirective;
+                                state = OutsideIfDirective;
                             }
-                            else if (line.AsSpan().IsElseDirective())
+                            else if (span.IsElseDirective())
                             {
-                                state = State.KeepingIfDirective;
+                                state = KeepingIfDirective;
                             }
                             break;
                         }
