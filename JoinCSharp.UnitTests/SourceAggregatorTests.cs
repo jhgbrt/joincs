@@ -30,7 +30,7 @@ namespace JoinCSharp.UnitTests
                             "    C\r\n" +
                             "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -44,7 +44,7 @@ namespace JoinCSharp.UnitTests
                             "{\r\n" +
                             "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -56,7 +56,7 @@ namespace JoinCSharp.UnitTests
 
             var expected = "extern alias SomeAlias;";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -68,9 +68,9 @@ namespace JoinCSharp.UnitTests
 
             var expected = "using SomeNamespace;\r\n\r\n[assembly: SomeAttribute()]";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
-        
+
         [Fact]
         public void AssemblyAttributeList()
         {
@@ -80,7 +80,7 @@ namespace JoinCSharp.UnitTests
 
             var expected = "using SomeNamespace;\r\n\r\n[assembly: MyAttribute(), SomeAttribute()]";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -99,7 +99,7 @@ namespace JoinCSharp.UnitTests
                            "\r\n" +
                            "[assembly: SomeAttribute1(), SomeAttribute2()]";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -116,7 +116,7 @@ namespace JoinCSharp.UnitTests
 
             var expected = "using SomeNamespace;";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -135,21 +135,24 @@ namespace JoinCSharp.UnitTests
                            "    }\r\n" +
                            "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void TwoSameUsingsAreGrouped()
         {
             var input = "using MyUsing;\r\nusing MyUsing;";
             var result = Process(input);
-            Assert.Equal("using MyUsing;", result);
+            var expected = "using MyUsing;";
+
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void TwoDifferentUsingsAreOrdered()
         {
             var input = "using MyUsing2;\r\nusing MyUsing1;";
             var result = Process(input);
-            Assert.Equal("using MyUsing1;\r\nusing MyUsing2;", result);
+            const string expected = "using MyUsing1;\r\nusing MyUsing2;";
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void StaticUsingInNamespace()
@@ -162,7 +165,7 @@ namespace JoinCSharp.UnitTests
                 "{\r\n" +
                 "    using static SomeClass;\r\n" +
                 "}";
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -170,7 +173,9 @@ namespace JoinCSharp.UnitTests
         {
             var input = "#if CONDITIONAL\r\nusing MyUsing;\r\n#endif";
             var result = Process(input, "CONDITIONAL");
-            Assert.Equal("using MyUsing;", result);
+            const string expected = "using MyUsing;";
+
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -178,7 +183,9 @@ namespace JoinCSharp.UnitTests
         {
             var input = "using MyUsing1;\r\n#if CONDITIONAL\r\nusing MyUsing;\r\n#endif";
             var result = Process(input, "CONDITIONAL");
-            Assert.Equal("using MyUsing;\r\nusing MyUsing1;", result);
+            const string expected = "using MyUsing;\r\nusing MyUsing1;";
+
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
 
@@ -202,7 +209,7 @@ namespace JoinCSharp.UnitTests
                 "    }\r\n" +
                 "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void SimpleUsing()
@@ -212,7 +219,7 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input, new string[] { "CONDITIONAL" });
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -223,8 +230,8 @@ namespace JoinCSharp.UnitTests
                 "#endif";
 
             var result = Process(input, Array.Empty<string>());
-
-            Assert.Equal(string.Empty, result);
+            var expected = string.Empty;
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -238,7 +245,7 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input, "CONDITIONAL");
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -264,7 +271,7 @@ namespace JoinCSharp.UnitTests
                 "{\r\n" +
                 "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void ProcessUsings()
@@ -273,7 +280,8 @@ namespace JoinCSharp.UnitTests
 
             string result = Process(input);
 
-            Assert.Equal("using MyUsing1;\r\nusing MyUsing2;", result);
+            const string expected = "using MyUsing1;\r\nusing MyUsing2;";
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -285,7 +293,8 @@ namespace JoinCSharp.UnitTests
         "using MyUsing2;\r\n" +
         "#endif";
             string result = Process(input, "CONDITIONAL");
-            Assert.Equal("using MyUsing1;\r\nusing MyUsing2;", result);
+            const string expected = "using MyUsing1;\r\nusing MyUsing2;";
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -300,7 +309,7 @@ namespace JoinCSharp.UnitTests
                            "{\r\n" +
                            "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -320,7 +329,7 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input);
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -348,7 +357,7 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input, "CONDITIONAL2");
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -370,7 +379,7 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input, new string[] { "CONDITIONAL" });
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
 

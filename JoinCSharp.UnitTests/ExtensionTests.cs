@@ -1,13 +1,16 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Text;
 using Xunit;
 
 namespace JoinCSharp.UnitTests
 {
+
     static class Ex
     {
+        public static string HandleCrLf(this string s)
+            => s.Replace("\r\n", Environment.NewLine);
+
         public static string Preprocess(this string s, params string[] directives)
         {
             return string.Join(Environment.NewLine, s.ReadLines().Preprocess(directives));
@@ -18,29 +21,29 @@ namespace JoinCSharp.UnitTests
         [Fact]
         public void IsBelow_FileInFolder_True()
         {
-            var fileInfo = new FileInfo(@"C:\Users\Joe\tmp.txt");
-            var root = new DirectoryInfo(@"C:\Users\Joe");
+            var fileInfo = PathBuilder.FromRoot().WithSubFolders("Users", "Joe").WithFileName("tmp.txt").FileInfo;
+            var root = PathBuilder.FromRoot().WithSubFolders("Users", "Joe").DirectoryInfo;
             Assert.True(fileInfo.SitsBelow(root));
         }
         [Fact]
         public void IsBelow_FileInFolderBelow_True()
         {
-            var fileInfo = new FileInfo(@"C:\Users\Joe\tmp.txt");
-            var root = new DirectoryInfo(@"C:\Users");
+            var fileInfo = PathBuilder.FromRoot().WithSubFolders("Users", "Joe").WithFileName("tmp.txt").FileInfo;
+            var root = PathBuilder.FromRoot().WithSubFolders("Users").DirectoryInfo;
             Assert.True(fileInfo.SitsBelow(root));
         }
         [Fact]
         public void IsBelow_FileInRootFolderBelow_True()
         {
-            var fileInfo = new FileInfo(@"C:\Users\Joe\tmp.txt");
-            var root = new DirectoryInfo(@"C:\");
+            var fileInfo = PathBuilder.FromRoot().WithSubFolders("Users", "Joe").WithFileName("tmp.txt").FileInfo;
+            var root = PathBuilder.FromRoot().DirectoryInfo;
             Assert.True(fileInfo.SitsBelow(root));
         }
         [Fact]
         public void IsBelow_FileOtherFolderBelow_False()
         {
-            var fileInfo = new FileInfo(@"C:\Users\Joe\tmp.txt");
-            var root = new DirectoryInfo(@"C:\Users\Jane");
+            var fileInfo = PathBuilder.FromRoot().WithSubFolders("Users", "Joe").WithFileName("tmp.txt").FileInfo;
+            var root = PathBuilder.FromRoot().WithSubFolders("Users", "Jane").DirectoryInfo;
             Assert.False(fileInfo.SitsBelow(root));
         }
 
@@ -49,68 +52,85 @@ namespace JoinCSharp.UnitTests
         {
             var input = new[]
             {
-                @"C:\A\AA\AAA.txt",
-                @"C:\A\AB\AAB.txt",
-                @"C:\A\AC\AAC.txt",
-                @"C:\A\AD\AAD.txt",
-                @"C:\A\AD\AAE.txt",
-                @"C:\A\AE\AAF.txt",
-            }.Select(s => new FileInfo(s));
+                PathBuilder.FromRoot().WithSubFolders("A", "AA").WithFileName("AAA.txt").FileInfo,
+                PathBuilder.FromRoot().WithSubFolders("A", "AB").WithFileName("AAB.txt").FileInfo,
+                PathBuilder.FromRoot().WithSubFolders("A", "AC").WithFileName("AAC.txt").FileInfo,
+                PathBuilder.FromRoot().WithSubFolders("A", "AD").WithFileName("AAD.txt").FileInfo,
+                PathBuilder.FromRoot().WithSubFolders("A", "AD").WithFileName("AAE.txt").FileInfo,
+                PathBuilder.FromRoot().WithSubFolders("A", "AE").WithFileName("AAF.txt").FileInfo
+            };
 
-            var rootDir = new DirectoryInfo(@"C:\A");
+            var rootDir = PathBuilder.FromRoot().WithSubFolders("A").DirectoryInfo;
             var subdirs = new[] { "AB", "AD"}.Select(rootDir.SubFolder).ToArray();
 
-            var result = input.Except(subdirs);
+            var result = input.Except(subdirs).Select(f => f.FullName).OrderBy(a => a).ToArray();
 
             var expected = new[]
             {
-                @"C:\A\AA\AAA.txt",
-                @"C:\A\AC\AAC.txt",
-                @"C:\A\AE\AAF.txt",
+                PathBuilder.FromRoot().WithSubFolders("A", "AA").WithFileName("AAA.txt").FileInfo.FullName,
+                PathBuilder.FromRoot().WithSubFolders("A", "AC").WithFileName("AAC.txt").FileInfo.FullName,
+                PathBuilder.FromRoot().WithSubFolders("A", "AE").WithFileName("AAF.txt").FileInfo.FullName
             };
 
-            Assert.Equal(expected, result.Select(f => f.FullName).ToArray());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void Preprocess_Empty_Remains()
         {
-            Assert.Equal(string.Empty, string.Empty.Preprocess());
+            string expected = string.Empty;
+            string result = string.Empty.Preprocess();
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void Preprocess_OnlyConditional_BecomesEmpty()
         {
-            Assert.Equal(string.Empty, "#if WHATEVER\r\n#endif".Preprocess());
+            string expected = string.Empty;
+            string result = "#if WHATEVER\r\n#endif".Preprocess();
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void Preprocess_AdditionalWhitespace_BecomesEmpty()
         {
-            Assert.Equal(string.Empty, "   #if   WHATEVER\t \r\n\t #endif".Preprocess());
+            string expected = string.Empty;
+            string result = "   #if   WHATEVER\t \r\n\t #endif".Preprocess();
+
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void Preprocess_AdditionalWhitespace_Negative_BecomesEmpty()
         {
-            Assert.Equal(string.Empty, "   #if   !WHATEVER\t \r\n\t #endif".Preprocess());
+            string expected = string.Empty;
+            string result = "   #if   !WHATEVER\t \r\n\t #endif".Preprocess();
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void Preprocess_NoWhitespace_Negative_BecomesEmpty()
         {
-            Assert.Equal(string.Empty, "#if !WHATEVER\t \r\n\t #endif".Preprocess());
+            string expected = string.Empty;
+            string result = "#if !WHATEVER\t \r\n\t #endif".Preprocess();
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void Preprocess_InvalidDirective_NotTouched()
         {
-            Assert.Equal("#if\r\n#endif", "#if\r\n#endif".Preprocess());
+            const string expected = "#if\r\n#endif";
+            string result = "#if\r\n#endif".Preprocess();
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void Preprocess_InvalidNegativeDirective_NotTouched()
         {
-            Assert.Equal("#if !\r\n#endif", "#if !\r\n#endif".Preprocess());
+            const string expected = "#if !\r\n#endif";
+            string result = "#if !\r\n#endif".Preprocess();
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void Preprocess_InvalidNegativeDirective2_NotTouched()
         {
-            Assert.Equal("#if!\r\n#endif", "#if!\r\n#endif".Preprocess());
+            const string expected = "#if!\r\n#endif";
+            string result = "#if!\r\n#endif".Preprocess();
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -126,8 +146,9 @@ namespace JoinCSharp.UnitTests
                            "}";
 
             var result = input.Preprocess();
-
-            Assert.Equal(input, result);
+            var expected = input;
+            
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void Preprocess_WithConditionals_Stripped()
@@ -151,7 +172,7 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess();
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void Preprocess_WithNegativeConditionals_Stripped()
@@ -178,7 +199,7 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess();
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -203,7 +224,7 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess("CONDITIONAL");
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
 
@@ -232,7 +253,7 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess("CONDITIONAL");
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
         [Fact]
@@ -245,8 +266,8 @@ namespace JoinCSharp.UnitTests
                         "#endif";
 
             var result = input.Preprocess("RELEASE");
-
-            Assert.Equal("RELEASE", result);
+            var expected = "RELEASE";
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
         [Fact]
         public void Preprocess_IfElse_2()
@@ -258,8 +279,8 @@ namespace JoinCSharp.UnitTests
                         "#endif";
 
             var result = input.Preprocess("DEBUG");
-
-            Assert.Equal("DEBUG", result);
+            var expected = "DEBUG";
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
     }
 }
