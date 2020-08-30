@@ -56,11 +56,12 @@ namespace JoinCSharp
 
             static State OutsideIfDirective(string line, string[] directives) => GetDirective(line) switch
             {
-                IfDirective ifd when string.IsNullOrEmpty(ifd.Symbol) => new(OutsideIfDirective, line),
-                IfDirective { Not: false } ifd when directives.Any(d => ifd.Symbol == d) => new(KeepingIfDirective, null),
-                IfDirective { Not: false } ifd when !directives.Any(d => ifd.Symbol == d) => new(SkippingIfDirective, null),
-                IfDirective { Not: true } ifd when directives.Any(d => ifd.Symbol == d) => new(SkippingIfDirective, null),
-                IfDirective { Not: true } ifd when !directives.Any(d => ifd.Symbol == d) => new(KeepingIfDirective, null),
+                IfDirective { IsValid: false }  => new(OutsideIfDirective, line),
+                IfDirective ifd => ifd.CodeShouldBeIncluded(directives) switch
+                {
+                    true => new (KeepingIfDirective, null),
+                    false => new (SkippingIfDirective, null)
+                },
                 _ => new(OutsideIfDirective, line)
             };
 
@@ -102,6 +103,8 @@ namespace JoinCSharp
                 string symbol = new(span[(index + 1)..].Trim());
                 return new IfDirective(not, symbol);
             }
+            public bool IsValid => !Not || Not && !string.IsNullOrEmpty(Symbol);
+            public bool CodeShouldBeIncluded(string[] directives) => directives.Any(directive => Symbol == directive) ? !Not : Not;
         }
 
         record EndIfDirective 
