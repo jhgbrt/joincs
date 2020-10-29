@@ -259,16 +259,36 @@ namespace JoinCSharp.UnitTests
         [Fact]
         public void Preprocess_IfElse()
         {
-            var input = "#if DEBUG\r\n" +
-                        "DEBUG\r\n" +
+            var input = "#if FOO\r\n" +
+                        "FOO\r\n" +
+                        "#elif BAR\r\n" +
+                        "BAR\r\n" +
                         "#else\r\n" +
-                        "RELEASE\r\n" +
+                        "BAZ\r\n" +
                         "#endif";
 
-            var result = input.Preprocess("RELEASE");
-            var expected = "RELEASE";
+            var result = input.Preprocess("FOO");
+            var expected = "FOO";
             Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
+
+
+        [Fact]
+        public void Preprocess_IfElIf()
+        {
+            var input = "#if FOO\r\n" +
+                        "FOO\r\n" +
+                        "#elif BAR\r\n" +
+                        "BAR\r\n" +
+                        "#else\r\n" +
+                        "BAZ\r\n" +
+                        "#endif";
+
+            var result = input.Preprocess("BAR");
+            var expected = "BAR";
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+        }
+
         [Fact]
         public void Preprocess_IfElse_2()
         {

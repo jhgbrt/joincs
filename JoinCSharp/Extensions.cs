@@ -36,59 +36,62 @@ namespace JoinCSharp
         internal static IEnumerable<string> Preprocess(this IEnumerable<IEnumerable<string>> input, params string[] directives) 
             => input.Select(x => string.Join(Environment.NewLine, x.Preprocess(directives)));
 
-        record State(ProcessLine NextProcessor, string? LineToYield);
+        record State(ProcessLine NextProcessor, string? LineToYield, bool Done);
 
-        delegate State ProcessLine(string line, string[] directives);
+        delegate State ProcessLine(string line, string[] directives, bool done);
         
         internal static IEnumerable<string> Preprocess(this IEnumerable<string> input, params string[] directives)
         {
             ProcessLine processLine = OutsideIfDirective;
+            bool done = false;
 
             foreach (string line in input)
             {
-                var next = processLine(line, directives);
+                var next = processLine(line, directives, done);
 
                 if (next.LineToYield != default)
                     yield return next.LineToYield;
 
                 processLine = next.NextProcessor;
+                done = next.Done;
             }
 
-            static State OutsideIfDirective(string line, string[] directives) => GetDirective(line) switch
+            static State OutsideIfDirective(string line, string[] directives, bool done) => GetDirective(line) switch
             {
-                IfDirective { IsValid: false }  => new(OutsideIfDirective, line),
-                IfDirective ifd => ifd.CodeShouldBeIncluded(directives) switch
-                {
-                    true => new (KeepingIfDirective, null),
-                    false => new (SkippingIfDirective, null)
-                },
-                _ => new(OutsideIfDirective, line)
+                IfDirective { IsValid: false } => new(OutsideIfDirective, line, false),
+                IfDirective ifd when ifd.CodeShouldBeIncluded(directives) => new(KeepingCode, null, false),
+                IfDirective => new (SkippingCode, null, false),
+                _ => new(OutsideIfDirective, line, false)
             };
 
-            static State KeepingIfDirective(string line, string[] directives) => GetDirective(line) switch
+            static State KeepingCode(string line, string[] directives, bool done) => GetDirective(line) switch
             {
-                EndIfDirective => new(OutsideIfDirective, null),
-                ElseDirective => new(SkippingIfDirective, null),
-                _ => new(KeepingIfDirective, line)
+                EndIfDirective => new(OutsideIfDirective, null, true),
+                ElseDirective => new(SkippingCode, null, true),
+                ElseIfDirective => new(SkippingCode, null, true),
+                _ => new(KeepingCode, line, true)
             };
 
-            static State SkippingIfDirective(string line, string[] directives) => GetDirective(line) switch
+            static State SkippingCode(string line, string[] directives, bool done) => GetDirective(line) switch
             {
-                EndIfDirective => new(OutsideIfDirective, null),
-                ElseDirective => new(KeepingIfDirective, null),
-                _ => new(SkippingIfDirective, null)
+                object when done => new(SkippingCode, null, done),
+                EndIfDirective => new(OutsideIfDirective, null, done),
+                ElseIfDirective ifd when ifd.CodeShouldBeIncluded(directives) => new(KeepingCode, null, false),
+                ElseIfDirective => new(SkippingCode, null, done),
+                ElseDirective => new(KeepingCode, null, done),
+                _ => new(SkippingCode, null, done)
             };
 
             static object? GetDirective(string line) => line.AsSpan().TrimStart() switch
             {
                 Span s when s.Length == 0 || s[0] != '#' => default,
-                Span s when s.StartsWith("#if ") => IfDirective.From(s),
+                Span s when s.StartsWith("#if ") => IfDirective.From(s.Slice(3)),
+                Span s when s.StartsWith("#elif ") => ElseIfDirective.From(s.Slice(5)),
                 Span s when s.StartsWith("#else") => ElseDirective.Instance,
                 Span s when s.StartsWith("#endif") => EndIfDirective.Instance,
                 _ => default
             };
         }
-
         record IfDirective(bool Not, string Symbol) 
         {
             public static IfDirective From(ReadOnlySpan<char> span)
@@ -97,11 +100,28 @@ namespace JoinCSharp
                 var not = index >= 0;
                 if (!not)
                 {
-                    index = 2;
+                    index = 0;
                 }
 
                 string symbol = new(span[(index + 1)..].Trim());
                 return new IfDirective(not, symbol);
+            }
+            public bool IsValid => !Not || Not && !string.IsNullOrEmpty(Symbol);
+            public bool CodeShouldBeIncluded(string[] directives) => directives.Any(directive => Symbol == directive) ? !Not : Not;
+        }
+        record ElseIfDirective(bool Not, string Symbol)
+        {
+            public static ElseIfDirective From(ReadOnlySpan<char> span)
+            {
+                var index = span.IndexOf('!');
+                var not = index >= 0;
+                if (!not)
+                {
+                    index = 0;
+                }
+
+                string symbol = new(span[(index + 1)..].Trim());
+                return new ElseIfDirective(not, symbol);
             }
             public bool IsValid => !Not || Not && !string.IsNullOrEmpty(Symbol);
             public bool CodeShouldBeIncluded(string[] directives) => directives.Any(directive => Symbol == directive) ? !Not : Not;
