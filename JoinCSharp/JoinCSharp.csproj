@@ -5,7 +5,7 @@
     <RootNamespace>JoinCSharp</RootNamespace>
     <AssemblyName>joincs</AssemblyName>
     <TargetFramework>net5.0</TargetFramework>
-    <Version>3.0.0-preview.1</Version>
+    <Version>3.0.0-preview.2</Version>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <PackageId>Join.CSharp</PackageId>
@@ -19,7 +19,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.7.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0-5.final" />
     <PackageReference Include="System.CommandLine.DragonFruit" Version="0.3.0-alpha.20371.2" />
   </ItemGroup>
 </Project>
