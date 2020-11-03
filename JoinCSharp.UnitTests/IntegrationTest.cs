@@ -11,38 +11,38 @@ namespace JoinCSharp.UnitTests
         private static readonly string[] sources = new[]
 {
                 "using Some.Using1;" +
-                "using Some.Using2;\r\n" +
-                "#if CONDITIONAL\r\n" +
-                "using Some.ConditionalUsing;\r\n" +
-                "#endif\r\n" +
-                "using static Abc.StaticClass;\r\n" + 
+                "using Some.Using2;" + Environment.NewLine + "" +
+                "#if CONDITIONAL" + Environment.NewLine + "" +
+                "using Some.ConditionalUsing;" + Environment.NewLine + "" +
+                "#endif" + Environment.NewLine + "" +
+                "using static Abc.StaticClass;" + Environment.NewLine + "" + 
                 "namespace Abc.Def " +
-                "{ \r\n" +
-                "using static StaticClass;\r\n" +
-                "// comment\r\n" +
+                "{ " + Environment.NewLine + "" +
+                "using static StaticClass;" + Environment.NewLine + "" +
+                "// comment" + Environment.NewLine + "" +
                 "class A {} }",
 
                 "using Some.Using1; using Some.Using3; namespace Abc.Def { class B {   public void y() { DomeSomething(); }} }",
 
                 "using Some.Using1; namespace Abc.Def.Ghi { class C {    public void x() {" +
-                "       // IDbConnection sql;\r\n" +
+                "       // IDbConnection sql;" + Environment.NewLine + "" +
                 "       DomeSomething2();        }    } }",
 
                 "using Some.Using3; namespace Xyz.Vwu { class E {} } namespace Xkcd.WhatIf { class G {} }",
 
-                "using Some.Using1; class C { \r\n" +
-                "\r\n// commentx\r\n" +
+                "using Some.Using1; class C { " + Environment.NewLine + "" +
+                "" + Environment.NewLine + "// commentx" + Environment.NewLine + "" +
                 "public static dynamic x() {return null;} } ",
 
-                "#if CONDITIONAL\r\n" +
-                "using Some.ConditionalUsing;\r\n" +
-                "#endif\r\n" +
-                "using Some.Using1;\r\n" +
-                "namespace Abc.Def\r\n" +
-                "{\r\n" +
-                "#if CONDITIONAL\r\n" +
-                "   class ConditionalClass{}\r\n" +
-                "#endif\r\n"+
+                "#if CONDITIONAL" + Environment.NewLine + "" +
+                "using Some.ConditionalUsing;" + Environment.NewLine + "" +
+                "#endif" + Environment.NewLine + "" +
+                "using Some.Using1;" + Environment.NewLine + "" +
+                "namespace Abc.Def" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "#if CONDITIONAL" + Environment.NewLine + "" +
+                "   class ConditionalClass{}" + Environment.NewLine + "" +
+                "#endif" + Environment.NewLine + ""+
                 "}"
             };
 
@@ -53,57 +53,57 @@ namespace JoinCSharp.UnitTests
             string result = sources.Select(s => s.ReadLines()).Preprocess().Aggregate();
 
             string expected =
-                "using static Abc.StaticClass;\r\n" +
-                "using Some.Using1;\r\n" +
-                "using Some.Using2;\r\n" +
-                "using Some.Using3;\r\n" +
-                "\r\n" +
-                "namespace Abc.Def\r\n" +
-                "{\r\n" +
-                "    using static StaticClass;\r\n" +
-                "\r\n" +
-                "    // comment\r\n" +
-                "    class A { }\r\n" +
-                "\r\n" +
-                "    class B\r\n" +
-                "    {\r\n" +
-                "        public void y()\r\n" +
-                "        {\r\n" +
-                "            DomeSomething();\r\n" +
-                "        }\r\n" +
-                "    }\r\n" +
-                "}\r\n" +
-                "\r\nnamespace Abc.Def.Ghi\r\n" +
-                "{\r\n" +
-                "    class C\r\n" +
-                "    {\r\n" +
-                "        public void x()\r\n" +
-                "        { // IDbConnection sql;\r\n" +
-                "            DomeSomething2();\r\n" +
-                "        }\r\n" +
-                "    }\r\n" +
-                "}\r\n" +
-                "\r\n" +
-                "namespace Xkcd.WhatIf\r\n" +
-                "{\r\n" +
-                "    class G { }\r\n" +
-                "}\r\n" +
-                "\r\n" +
-                "namespace Xyz.Vwu\r\n" +
-                "{\r\n" +
-                "    class E { }\r\n" +
-                "}\r\n" +
-                "\r\nclass C\r\n" +
-                "{\r\n" +
-                "    // commentx\r\n" +
-                "    public static dynamic x()\r\n" +
-                "    {\r\n" +
-                "        return null;\r\n" +
-                "    }\r\n" +
+                "using static Abc.StaticClass;" + Environment.NewLine + "" +
+                "using Some.Using1;" + Environment.NewLine + "" +
+                "using Some.Using2;" + Environment.NewLine + "" +
+                "using Some.Using3;" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
+                "namespace Abc.Def" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    using static StaticClass;" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
+                "    // comment" + Environment.NewLine + "" +
+                "    class A { }" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
+                "    class B" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "        public void y()" + Environment.NewLine + "" +
+                "        {" + Environment.NewLine + "" +
+                "            DomeSomething();" + Environment.NewLine + "" +
+                "        }" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "}" + Environment.NewLine + "" +
+                "\r\nnamespace Abc.Def.Ghi" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    class C" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "        public void x()" + Environment.NewLine + "" +
+                "        { // IDbConnection sql;" + Environment.NewLine + "" +
+                "            DomeSomething2();" + Environment.NewLine + "" +
+                "        }" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "}" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
+                "namespace Xkcd.WhatIf" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    class G { }" + Environment.NewLine + "" +
+                "}" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
+                "namespace Xyz.Vwu" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    class E { }" + Environment.NewLine + "" +
+                "}" + Environment.NewLine + "" +
+                "\r\nclass C" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    // commentx" + Environment.NewLine + "" +
+                "    public static dynamic x()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "        return null;" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
                 "}";
 
             ShowInteractiveDiffIfDifferent(result, expected);
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
 
@@ -114,62 +114,62 @@ namespace JoinCSharp.UnitTests
             string result = sources.Select(s => s.ReadLines()).Preprocess("CONDITIONAL").Aggregate();
 
             string expected =
-                "using static Abc.StaticClass;\r\n" +
-                "using Some.ConditionalUsing;\r\n" +
-                "using Some.Using1;\r\n" +
-                "using Some.Using2;\r\n" +
-                "using Some.Using3;\r\n" +
-                "\r\n" +
-                "namespace Abc.Def\r\n" +
-                "{\r\n" +
-                "    using static StaticClass;\r\n" +
-                "\r\n" +
-                "    // comment\r\n" +
-                "    class A { }\r\n" +
-                "\r\n" +
-                "    class B\r\n" +
-                "    {\r\n" +
-                "        public void y()\r\n" +
-                "        {\r\n" +
-                "            DomeSomething();\r\n" +
-                "        }\r\n" +
-                "    }\r\n" +
-                "\r\n" +
-                "    class ConditionalClass { }\r\n" +
-                "}\r\n" +
-                "\r\n" +
-                "namespace Abc.Def.Ghi\r\n" +
-                "{\r\n" +
-                "    class C\r\n" +
-                "    {\r\n" +
-                "        public void x()\r\n" +
-                "        { // IDbConnection sql;\r\n" +
-                "            DomeSomething2();\r\n" +
-                "        }\r\n" +
-                "    }\r\n" +
-                "}\r\n" +
-                "\r\n" +
-                "namespace Xkcd.WhatIf\r\n" +
-                "{\r\n" +
-                "    class G { }\r\n" +
-                "}\r\n" +
-                "\r\n" +
-                "namespace Xyz.Vwu\r\n" +
-                "{\r\n" +
-                "    class E { }\r\n" +
-                "}\r\n" +
-                "\r\n" +
-                "class C\r\n" +
-                "{\r\n" +
-                "    // commentx\r\n" +
-                "    public static dynamic x()\r\n" +
-                "    {\r\n" +
-                "        return null;\r\n" +
-                "    }\r\n" +
+                "using static Abc.StaticClass;" + Environment.NewLine + "" +
+                "using Some.ConditionalUsing;" + Environment.NewLine + "" +
+                "using Some.Using1;" + Environment.NewLine + "" +
+                "using Some.Using2;" + Environment.NewLine + "" +
+                "using Some.Using3;" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
+                "namespace Abc.Def" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    using static StaticClass;" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
+                "    // comment" + Environment.NewLine + "" +
+                "    class A { }" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
+                "    class B" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "        public void y()" + Environment.NewLine + "" +
+                "        {" + Environment.NewLine + "" +
+                "            DomeSomething();" + Environment.NewLine + "" +
+                "        }" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
+                "    class ConditionalClass { }" + Environment.NewLine + "" +
+                "}" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
+                "namespace Abc.Def.Ghi" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    class C" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "        public void x()" + Environment.NewLine + "" +
+                "        { // IDbConnection sql;" + Environment.NewLine + "" +
+                "            DomeSomething2();" + Environment.NewLine + "" +
+                "        }" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "}" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
+                "namespace Xkcd.WhatIf" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    class G { }" + Environment.NewLine + "" +
+                "}" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
+                "namespace Xyz.Vwu" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    class E { }" + Environment.NewLine + "" +
+                "}" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
+                "class C" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    // commentx" + Environment.NewLine + "" +
+                "    public static dynamic x()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "        return null;" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
                 "}";
 
             ShowInteractiveDiffIfDifferent(result, expected);
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         static Lazy<string> winmerge = new Lazy<string>(() => new[]

@@ -8,9 +8,6 @@ namespace JoinCSharp.UnitTests
 
     static class Ex
     {
-        public static string HandleCrLf(this string s)
-            => s.Replace("\r\n", Environment.NewLine);
-
         public static string Preprocess(this string s, params string[] directives)
         {
             return string.Join(Environment.NewLine, s.ReadLines().Preprocess(directives));
@@ -61,7 +58,7 @@ namespace JoinCSharp.UnitTests
             };
 
             var rootDir = PathBuilder.FromRoot().WithSubFolders("A").DirectoryInfo;
-            var subdirs = new[] { "AB", "AD"}.Select(rootDir.SubFolder).ToArray();
+            var subdirs = new[] { "AB", "AD" }.Select(rootDir.SubFolder).ToArray();
 
             var result = input.Except(subdirs).Select(f => f.FullName).OrderBy(a => a).ToArray();
 
@@ -79,228 +76,267 @@ namespace JoinCSharp.UnitTests
         public void Preprocess_Empty_Remains()
         {
             string expected = string.Empty;
-            string result = string.Empty.Preprocess();
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            string input = string.Empty;
+            string result = input.Preprocess();
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void Preprocess_OnlyConditional_BecomesEmpty()
         {
             string expected = string.Empty;
-            string result = "#if WHATEVER\r\n#endif".Preprocess();
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            string input =
+                "#if WHATEVER" + Environment.NewLine +
+                "#endif";
+            string result = input.Preprocess();
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void Preprocess_AdditionalWhitespace_BecomesEmpty()
         {
             string expected = string.Empty;
-            string result = "   #if   WHATEVER\t \r\n\t #endif".Preprocess();
-
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            string input =
+                "   #if   WHATEVER\t " + Environment.NewLine +
+                "\t #endif";
+            string result = input.Preprocess();
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void Preprocess_AdditionalWhitespace_Negative_BecomesEmpty()
         {
             string expected = string.Empty;
-            string result = "   #if   !WHATEVER\t \r\n\t #endif".Preprocess();
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            string input =
+                "   #if   !WHATEVER\t " + Environment.NewLine +
+                "\t #endif";
+            string result = input.Preprocess();
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void Preprocess_NoWhitespace_Negative_BecomesEmpty()
         {
             string expected = string.Empty;
-            string result = "#if !WHATEVER\t \r\n\t #endif".Preprocess();
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            string input =
+                "#if !WHATEVER\t " + Environment.NewLine +
+                "\t #endif";
+            string result = input.Preprocess();
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void Preprocess_InvalidDirective_NotTouched()
         {
-            const string expected = "#if\r\n#endif";
-            string result = "#if\r\n#endif".Preprocess();
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            string expected =
+                "#if" + Environment.NewLine +
+                "#endif";
+            string input =
+                "#if" + Environment.NewLine +
+                "#endif";
+            string result = input.Preprocess();
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void Preprocess_InvalidNegativeDirective_NotTouched()
         {
-            const string expected = "#if !\r\n#endif";
-            string result = "#if !\r\n#endif".Preprocess();
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            string expected =
+                "#if !" + Environment.NewLine +
+                "#endif";
+            string input =
+                "#if !" + Environment.NewLine +
+                "#endif";
+            string result = input.Preprocess();
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void Preprocess_InvalidNegativeDirective2_NotTouched()
         {
-            const string expected = "#if!\r\n#endif";
-            string result = "#if!\r\n#endif".Preprocess();
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            string expected =
+                "#if!" + Environment.NewLine +
+                "#endif";
+            string input =
+                "#if!" + Environment.NewLine +
+                "#endif";
+            string result = input.Preprocess();
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void Preprocess_NoConditionals_Remains()
         {
-            string input = "class SomeClass {\r\n" +
-                           "    void MyMethod1()\r\n" +
-                           "    {\r\n" +
-                           "    }\r\n" +
-                           "    void MyMethod2()\r\n" +
-                           "    {\r\n" +
-                           "    }\r\n" +
-                           "}";
+            string input =
+                "class SomeClass {" + Environment.NewLine + "" +
+                "    void MyMethod1()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "    void MyMethod2()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "}";
 
             var result = input.Preprocess();
             var expected = input;
-            
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void Preprocess_WithConditionals_Stripped()
         {
-            string input = "class SomeClass {\r\n" +
-                           "#if CONDITIONAL\r\n" +
-                           "    void MyMethod1()\r\n" +
-                           "    {\r\n" +
-                           "    }\r\n" +
-                           "#endif\r\n" +
-                           "    void MyMethod2()\r\n" +
-                           "    {\r\n" +
-                           "    }\r\n" +
-                           "}";
+            string input = 
+                "class SomeClass {" + Environment.NewLine + "" +
+                "#if CONDITIONAL" + Environment.NewLine + "" +
+                "    void MyMethod1()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "#endif" + Environment.NewLine + "" +
+                "    void MyMethod2()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "}";
 
-            string expected = "class SomeClass {\r\n" +
-                              "    void MyMethod2()\r\n" +
-                              "    {\r\n" +
-                              "    }\r\n" +
-                              "}";
+            string expected = 
+                "class SomeClass {" + Environment.NewLine + "" +
+                "    void MyMethod2()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "}";
 
             var result = input.Preprocess();
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void Preprocess_WithNegativeConditionals_Stripped()
         {
-            string input = "class SomeClass {\r\n" +
-                           "#if !CONDITIONAL\r\n" +
-                           "    void MyMethod1()\r\n" +
-                           "    {\r\n" +
-                           "    }\r\n" +
-                           "#endif\r\n" +
-                           "    void MyMethod2()\r\n" +
-                           "    {\r\n" +
-                           "    }\r\n" +
-                           "}";
+            string input = 
+                "class SomeClass {" + Environment.NewLine + "" +
+                "#if !CONDITIONAL" + Environment.NewLine + "" +
+                "    void MyMethod1()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "#endif" + Environment.NewLine + "" +
+                "    void MyMethod2()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "}";
 
-            string expected = "class SomeClass {\r\n" +
-                              "    void MyMethod1()\r\n" +
-                              "    {\r\n" +
-                              "    }\r\n" +
-                              "    void MyMethod2()\r\n" +
-                              "    {\r\n" +
-                              "    }\r\n" +
-                              "}";
+            string expected = 
+                "class SomeClass {" + Environment.NewLine + "" +
+                "    void MyMethod1()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "    void MyMethod2()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "}";
 
             var result = input.Preprocess();
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void Preprocess_WithNegativeConditionals_ConditionalSpecifed_NotStripped()
         {
-            string input = "class SomeClass {\r\n" +
-                           "#if !CONDITIONAL\r\n" +
-                           "    void MyMethod1()\r\n" +
-                           "    {\r\n" +
-                           "    }\r\n" +
-                           "#endif\r\n" +
-                           "    void MyMethod2()\r\n" +
-                           "    {\r\n" +
-                           "    }\r\n" +
-                           "}";
+            string input = 
+                "class SomeClass {" + Environment.NewLine + "" +
+                "#if !CONDITIONAL" + Environment.NewLine + "" +
+                "    void MyMethod1()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "#endif" + Environment.NewLine + "" +
+                "    void MyMethod2()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "}";
 
-            string expected = "class SomeClass {\r\n" +
-                              "    void MyMethod2()\r\n" +
-                              "    {\r\n" +
-                              "    }\r\n" +
-                              "}";
+            string expected = 
+                "class SomeClass {" + Environment.NewLine + "" +
+                "    void MyMethod2()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "}";
 
             var result = input.Preprocess("CONDITIONAL");
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
 
         [Fact]
         public void Preprocess_WithConditionals_DirectiveSpecified_Retained()
         {
-            string input = "class SomeClass {\r\n" +
-                           "#if CONDITIONAL\r\n" +
-                           "    void MyMethod1()\r\n" +
-                           "    {\r\n" +
-                           "    }\r\n" +
-                           "#endif\r\n" +
-                           "    void MyMethod2()\r\n" +
-                           "    {\r\n" +
-                           "    }\r\n" +
-                           "}";
+            string input = 
+                "class SomeClass {" + Environment.NewLine + "" +
+                "#if CONDITIONAL" + Environment.NewLine + "" +
+                "    void MyMethod1()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "#endif" + Environment.NewLine + "" +
+                "    void MyMethod2()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "}";
 
-            string expected = "class SomeClass {\r\n" +
-                              "    void MyMethod1()\r\n" +
-                              "    {\r\n" +
-                              "    }\r\n" +
-                              "    void MyMethod2()\r\n" +
-                              "    {\r\n" +
-                              "    }\r\n" +
-                              "}";
+            string expected = 
+                "class SomeClass {" + Environment.NewLine + "" +
+                "    void MyMethod1()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "    void MyMethod2()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "}";
 
             var result = input.Preprocess("CONDITIONAL");
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void Preprocess_IfElse()
         {
-            var input = "#if FOO\r\n" +
-                        "FOO\r\n" +
-                        "#elif BAR\r\n" +
-                        "BAR\r\n" +
-                        "#else\r\n" +
-                        "BAZ\r\n" +
-                        "#endif";
+            var input = 
+                "#if FOO" + Environment.NewLine + "" +
+                "FOO" + Environment.NewLine + "" +
+                "#elif BAR" + Environment.NewLine + "" +
+                "BAR" + Environment.NewLine + "" +
+                "#else" + Environment.NewLine + "" +
+                "BAZ" + Environment.NewLine + "" +
+                "#endif";
 
             var result = input.Preprocess("FOO");
             var expected = "FOO";
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
 
         [Fact]
         public void Preprocess_IfElIf()
         {
-            var input = "#if FOO\r\n" +
-                        "FOO\r\n" +
-                        "#elif BAR\r\n" +
-                        "BAR\r\n" +
-                        "#else\r\n" +
-                        "BAZ\r\n" +
-                        "#endif";
+            var input = 
+                "#if FOO" + Environment.NewLine + "" +
+                "FOO" + Environment.NewLine + "" +
+                "#elif BAR" + Environment.NewLine + "" +
+                "BAR" + Environment.NewLine + "" +
+                "#else" + Environment.NewLine + "" +
+                "BAZ" + Environment.NewLine + "" +
+                "#endif";
 
             var result = input.Preprocess("BAR");
             var expected = "BAR";
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void Preprocess_IfElse_2()
         {
-            var input = "#if DEBUG\r\n" +
-                        "DEBUG\r\n" +
-                        "#else\r\n" +
-                        "RELEASE\r\n" +
-                        "#endif";
+            var input = 
+                "#if DEBUG" + Environment.NewLine + "" +
+                "DEBUG" + Environment.NewLine + "" +
+                "#else" + Environment.NewLine + "" +
+                "RELEASE" + Environment.NewLine + "" +
+                "#endif";
 
             var result = input.Preprocess("DEBUG");
             var expected = "DEBUG";
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
     }
 }

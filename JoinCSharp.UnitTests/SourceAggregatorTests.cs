@@ -6,11 +6,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JoinCSharp.UnitTests
 {
     public class SourceAggregatorTests
     {
+        ITestOutputHelper _output;
+        public SourceAggregatorTests(ITestOutputHelper helper)
+        {
+            _output = helper;
+        }
+
         private static string Process(string input, params string[] preprocessorSymbols)
         {
             return new SourceAggregator(true).AddSource(input.Preprocess(preprocessorSymbols)).GetResult();
@@ -23,14 +30,14 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input);
 
-            var expected = "enum MyEnum\r\n" +
-                            "{\r\n" +
-                            "    A,\r\n" +
-                            "    B,\r\n" +
-                            "    C\r\n" +
+            var expected = "enum MyEnum" + Environment.NewLine + "" +
+                            "{" + Environment.NewLine + "" +
+                            "    A," + Environment.NewLine + "" +
+                            "    B," + Environment.NewLine + "" +
+                            "    C" + Environment.NewLine + "" +
                             "}";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
@@ -42,7 +49,7 @@ namespace JoinCSharp.UnitTests
 
             var expected = "class SomeClass { }";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
@@ -52,12 +59,12 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input);
 
-            var expected = "class SomeClass\r\n" +
-                "{\r\n" +
-                "    private bool _b;\r\n" +
+            var expected = "class SomeClass" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    private bool _b;" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void EmptyInterface_IsFormattedOnOneLine()
@@ -68,7 +75,7 @@ namespace JoinCSharp.UnitTests
 
             var expected = "interface SomeClass { }";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void NonEmptyInterface_IsNotFormattedOnOneLine()
@@ -77,12 +84,12 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input);
 
-            var expected = "interface SomeClass\r\n" +
-                "{\r\n" +
-                "    private void M();\r\n" +
+            var expected = "interface SomeClass" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    private void M();" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
@@ -92,12 +99,12 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input);
 
-            var expected = "class SomeClass\r\n" +
-                "{\r\n" +
-                "    private void M() { }\r\n" +
+            var expected = "class SomeClass" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    private void M() { }" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void ExpressionMethod_IsFormattedOnOneLine()
@@ -106,12 +113,12 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input);
 
-            var expected = "class SomeClass\r\n" +
-                "{\r\n" +
-                "    private int M() => 1;\r\n" +
+            var expected = "class SomeClass" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    private int M() => 1;" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void ExpressionProperty_IsFormattedOnOneLine()
@@ -121,12 +128,12 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input);
 
-            var expected = "class SomeClass\r\n" +
-                "{\r\n" +
-                "    private int M => 1;\r\n" +
+            var expected = "class SomeClass" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    private int M => 1;" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void AutoProperty_IsFormattedOnOneLine()
@@ -135,12 +142,12 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input);
 
-            var expected = "class SomeClass\r\n" +
-                "{\r\n" +
-                "    private int M { get; set; }\r\n" +
+            var expected = "class SomeClass" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    private int M { get; set; }" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void ReadonlyProperty_IsFormattedOnOneLine()
@@ -149,12 +156,12 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input);
 
-            var expected = "class SomeClass\r\n" +
-                "{\r\n" +
-                "    private int M { get; }\r\n" +
+            var expected = "class SomeClass" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    private int M { get; }" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
@@ -166,31 +173,31 @@ namespace JoinCSharp.UnitTests
 
             var expected = "extern alias SomeAlias;";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void AssemblyAttribute()
         {
-            var input = "using SomeNamespace;\r\n[assembly: SomeAttribute()]";
+            var input = "using SomeNamespace;" + Environment.NewLine + "[assembly: SomeAttribute()]";
 
             var result = Process(input);
 
-            var expected = "using SomeNamespace;\r\n\r\n[assembly: SomeAttribute()]";
+            var expected = "using SomeNamespace;" + Environment.NewLine + "" + Environment.NewLine + "[assembly: SomeAttribute()]";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void AssemblyAttributeList()
         {
-            var input = "using SomeNamespace;\r\n[assembly: SomeAttribute(), MyAttribute()]";
+            var input = "using SomeNamespace;" + Environment.NewLine + "[assembly: SomeAttribute(), MyAttribute()]";
 
             var result = Process(input);
 
-            var expected = "using SomeNamespace;\r\n\r\n[assembly: MyAttribute(), SomeAttribute()]";
+            var expected = "using SomeNamespace;" + Environment.NewLine + "" + Environment.NewLine + "[assembly: MyAttribute(), SomeAttribute()]";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
@@ -198,18 +205,18 @@ namespace JoinCSharp.UnitTests
         {
             var input = new[]
             {
-                "using SomeNamespace;\r\n" +
-                "[assembly: SomeAttribute2()]\r\n",
+                "using SomeNamespace;" + Environment.NewLine + "" +
+                "[assembly: SomeAttribute2()]" + Environment.NewLine + "",
                 "[assembly: SomeAttribute1()]"
             };
 
             var result = input.Aggregate(true);
 
-            var expected = "using SomeNamespace;\r\n" +
-                           "\r\n" +
+            var expected = "using SomeNamespace;" + Environment.NewLine + "" +
+                           "" + Environment.NewLine + "" +
                            "[assembly: SomeAttribute1(), SomeAttribute2()]";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
@@ -217,8 +224,8 @@ namespace JoinCSharp.UnitTests
         {
             var input = new[]
             {
-                "using SomeNamespace;\r\n" +
-                "[assembly: SomeAttribute2()]\r\n",
+                "using SomeNamespace;" + Environment.NewLine + "" +
+                "[assembly: SomeAttribute2()]" + Environment.NewLine + "",
                 "[assembly: SomeAttribute1()]"
             };
 
@@ -226,7 +233,7 @@ namespace JoinCSharp.UnitTests
 
             var expected = "using SomeNamespace;";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
@@ -236,14 +243,14 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input);
 
-            var expected = "using Some.Using;\r\n" +
-                           "\r\n" +
-                           "namespace Some.Namespace\r\n" +
-                           "{\r\n" +
-                           "    class SomeClass { }\r\n" +
+            var expected = "using Some.Using;" + Environment.NewLine + "" +
+                           "" + Environment.NewLine + "" +
+                           "namespace Some.Namespace" + Environment.NewLine + "" +
+                           "{" + Environment.NewLine + "" +
+                           "    class SomeClass { }" + Environment.NewLine + "" +
                            "}";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void TwoSameUsingsAreGrouped()
@@ -252,7 +259,7 @@ namespace JoinCSharp.UnitTests
             var result = Process(input);
             var expected = "using MyUsing;";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void TwoDifferentUsingsAreOrdered()
@@ -260,7 +267,7 @@ namespace JoinCSharp.UnitTests
             var input = "using MyUsing2;\r\nusing MyUsing1;";
             var result = Process(input);
             const string expected = "using MyUsing1;\r\nusing MyUsing2;";
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void StaticUsingInNamespace()
@@ -269,31 +276,31 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input);
 
-            var expected = "namespace Some.Namespace\r\n" +
-                "{\r\n" +
-                "    using static SomeClass;\r\n" +
+            var expected = "namespace Some.Namespace" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    using static SomeClass;" + Environment.NewLine + "" +
                 "}";
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void ConditionalIsStripped()
         {
-            var input = "#if CONDITIONAL\r\nusing MyUsing;\r\n#endif";
+            var input = "#if CONDITIONAL\r\nusing MyUsing;" + Environment.NewLine + "#endif";
             var result = Process(input, "CONDITIONAL");
             const string expected = "using MyUsing;";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void ConditionalIsStrippedFromCode()
         {
-            var input = "using MyUsing1;\r\n#if CONDITIONAL\r\nusing MyUsing;\r\n#endif";
+            var input = "using MyUsing1;" + Environment.NewLine + "#if CONDITIONAL\r\nusing MyUsing;" + Environment.NewLine + "#endif";
             var result = Process(input, "CONDITIONAL");
             const string expected = "using MyUsing;\r\nusing MyUsing1;";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
 
@@ -301,21 +308,21 @@ namespace JoinCSharp.UnitTests
         public void WhenCompilingWithPreprocessorDirective_ConditionalCodeIsRetained()
         {
             var input =
-                "namespace Abc.Def\r\n" +
-                "{\r\n" +
-                "#if CONDITIONAL\r\n" +
-                "   class ConditionalClass{}\r\n" +
-                "#endif\r\n" +
+                "namespace Abc.Def" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "#if CONDITIONAL" + Environment.NewLine + "" +
+                "   class ConditionalClass{}" + Environment.NewLine + "" +
+                "#endif" + Environment.NewLine + "" +
                 "}";
 
             var result = Process(input, new[] { "CONDITIONAL" });
 
-            var expected = "namespace Abc.Def\r\n" +
-                "{\r\n" +
-                "    class ConditionalClass { }\r\n" +
+            var expected = "namespace Abc.Def" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "    class ConditionalClass { }" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void SimpleUsing()
@@ -325,59 +332,59 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input, new string[] { "CONDITIONAL" });
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void ConditionalUsing_NoPreprocessorSymbols_UsingIsRemoved()
         {
-            string input = "#if CONDITIONAL\r\n" +
-                "using Some.Using;\r\n" +
+            string input = "#if CONDITIONAL" + Environment.NewLine + "" +
+                "using Some.Using;" + Environment.NewLine + "" +
                 "#endif";
 
             var result = Process(input, Array.Empty<string>());
             var expected = string.Empty;
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void ConditionalUsing_WithPreprocessorSymbol_UsingIsMaintained()
         {
-            string input = "#if CONDITIONAL\r\n" +
-                "using Some.Using;\r\n" +
+            string input = "#if CONDITIONAL" + Environment.NewLine + "" +
+                "using Some.Using;" + Environment.NewLine + "" +
                 "#endif";
 
             string expected = "using Some.Using;";
 
             var result = Process(input, "CONDITIONAL");
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void WhenCompilingWithoutConditionalDirective_ConditionalCodeIsStrippedAway()
         {
             var input =
-                "#if CONDITIONAL\r\n" +
-                "using Some.ConditionalUsing;\r\n" +
-                "#endif\r\n" +
-                "using Some.Using1;\r\n" +
-                "namespace Abc.Def\r\n" +
-                "{\r\n" +
-                "#if CONDITIONAL\r\n" +
-                "   class ConditionalClass{}\r\n" +
-                "#endif\r\n" +
+                "#if CONDITIONAL" + Environment.NewLine + "" +
+                "using Some.ConditionalUsing;" + Environment.NewLine + "" +
+                "#endif" + Environment.NewLine + "" +
+                "using Some.Using1;" + Environment.NewLine + "" +
+                "namespace Abc.Def" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "#if CONDITIONAL" + Environment.NewLine + "" +
+                "   class ConditionalClass{}" + Environment.NewLine + "" +
+                "#endif" + Environment.NewLine + "" +
                 "}";
 
             var result = Process(input);
 
             var expected =
-                "using Some.Using1;\r\n\r\n" +
-                "namespace Abc.Def\r\n" +
-                "{\r\n" +
+                "using Some.Using1;" + Environment.NewLine + "" + Environment.NewLine + "" +
+                "namespace Abc.Def" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
         [Fact]
         public void ProcessUsings()
@@ -387,20 +394,20 @@ namespace JoinCSharp.UnitTests
             string result = Process(input);
 
             const string expected = "using MyUsing1;\r\nusing MyUsing2;";
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void ConditionalIsNotStrippedFromCode()
         {
             string input =
-        "using MyUsing1;\r\n" +
-        "#if CONDITIONAL\r\n" +
-        "using MyUsing2;\r\n" +
+        "using MyUsing1;" + Environment.NewLine + "" +
+        "#if CONDITIONAL" + Environment.NewLine + "" +
+        "using MyUsing2;" + Environment.NewLine + "" +
         "#endif";
             string result = Process(input, "CONDITIONAL");
             const string expected = "using MyUsing1;\r\nusing MyUsing2;";
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
@@ -410,92 +417,134 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input);
 
-            var expected = "// some comment\r\n" +
+            var expected = "// some comment" + Environment.NewLine + "" +
                            "class SomeClass { }";
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void ConditionalMethod_NoSymbols_MethodIsStripped()
         {
-            string input = "class SomeClass {\r\n" +
-                "#if CONDITIONAL\r\n" +
-                "    void MyMethod()\r\n" +
-                "    {\r\n" +
-                "    }\r\n" +
-                "#endif\r\n" +
+            string input = "class SomeClass {" + Environment.NewLine + "" +
+                "#if CONDITIONAL" + Environment.NewLine + "" +
+                "    void MyMethod()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "#endif" + Environment.NewLine + "" +
                 "}";
 
             string expected = "class SomeClass { }";
 
             var result = Process(input);
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void ConditionalMethod_WithSymbols_MethodIsNotStripped()
         {
-            string input = "class SomeClass {\r\n" +
-                           "#if CONDITIONAL1\r\n" +
-                           "    void MyMethod1()\r\n" +
-                           "    {\r\n" +
-                           "    }\r\n" +
-                           "#endif\r\n" +
-                           "#if CONDITIONAL2\r\n" +
-                           "    void MyMethod2()\r\n" +
-                           "    {\r\n" +
-                           "    }\r\n" +
-                           "#endif\r\n" +
+            string input = "class SomeClass {" + Environment.NewLine + "" +
+                           "#if CONDITIONAL1" + Environment.NewLine + "" +
+                           "    void MyMethod1()" + Environment.NewLine + "" +
+                           "    {" + Environment.NewLine + "" +
+                           "    }" + Environment.NewLine + "" +
+                           "#endif" + Environment.NewLine + "" +
+                           "#if CONDITIONAL2" + Environment.NewLine + "" +
+                           "    void MyMethod2()" + Environment.NewLine + "" +
+                           "    {" + Environment.NewLine + "" +
+                           "    }" + Environment.NewLine + "" +
+                           "#endif" + Environment.NewLine + "" +
                            "}";
 
-            string expected = "class SomeClass\r\n" +
-                              "{\r\n" +
-                              "    void MyMethod2() { }\r\n" +
+            string expected = "class SomeClass" + Environment.NewLine + "" +
+                              "{" + Environment.NewLine + "" +
+                              "    void MyMethod2() { }" + Environment.NewLine + "" +
                               "}";
 
             var result = Process(input, "CONDITIONAL2");
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+            Assert.Equal(expected, result);
         }
 
         [Fact]
         public void ConditionalClass_WithDirective_ClassIsStripped()
         {
-            string input = "namespace Abc.Def\r\n" +
-                "{\r\n" +
-                "#if CONDITIONAL\r\n" +
-                "   class ConditionalClass{}\r\n" +
-                "#endif\r\n" +
+            string input = "namespace Abc.Def" + Environment.NewLine + "" +
+                "{" + Environment.NewLine + "" +
+                "#if CONDITIONAL" + Environment.NewLine + "" +
+                "   class ConditionalClass{}" + Environment.NewLine + "" +
+                "#endif" + Environment.NewLine + "" +
                 "}";
 
-            string expected = "namespace Abc.Def\r\n" +
-                            "{\r\n" +
-                            "    class ConditionalClass { }\r\n" +
+            string expected = "namespace Abc.Def" + Environment.NewLine + "" +
+                            "{" + Environment.NewLine + "" +
+                            "    class ConditionalClass { }" + Environment.NewLine + "" +
                             "}";
 
             var result = Process(input, new string[] { "CONDITIONAL" });
 
-            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
-        }
-
-        public void ObjectInitializerShouldBeProperlyFormatted()
-        {
-            var input = "var p = new MyClass { SomeProperty = \"SomeValue\" }";
-
-            var result = CSharpSyntaxTree.ParseText(input)
-                .GetRoot()
-                .NormalizeWhitespace()
-                .ToFullString();
-
-            var expected = "var p = new MyClass\r\n" +
-                "{\r\n" +
-                "    SomeProperty = \"SomeValue\"\r\n" +
-                "}";
-
             Assert.Equal(expected, result);
         }
 
+        [Fact]
+        public void ObjectInitializerShouldBeProperlyFormatted()
+        {
+            var input = "var p = new MyClass(a,b,c)" +
+                "{" +
+                "  Alfa = \"SomeValue\", " +
+                "  Bravo = OtherValue," +
+                "  Charlie = 5," +
+                "  Delta = \"SomeValue\", " +
+                "  Echo = OtherValue," +
+                "  Foxtrot = 5," +
+                "  Golf = \"SomeValue\", " +
+                "  Hotel = OtherValue," +
+                "  India = 5" +
+                "}";
+
+            var expected = "var p = new MyClass(a, b, c)" + Environment.NewLine +
+                "{" +                              Environment.NewLine +
+                "    Alfa = \"SomeValue\"," +    Environment.NewLine +
+                "    Bravo = OtherValue," +       Environment.NewLine +
+                "    Charlie = 5," +              Environment.NewLine +
+                "    Delta = \"SomeValue\"," +   Environment.NewLine +
+                "    Echo = OtherValue," +        Environment.NewLine +
+                "    Foxtrot = 5," +              Environment.NewLine +
+                "    Golf = \"SomeValue\"," +    Environment.NewLine +
+                "    Hotel = OtherValue," +       Environment.NewLine +
+                "    India = 5" +                Environment.NewLine +
+                "}";
+
+            var result = Process(input);
+
+            _output.WriteLine(result);
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
+        public void EmptyObjectInitializerShouldBeProperlyFormatted()
+        {
+            var input = "var p = new MyClass() {}";
+
+            var expected = "var p = new MyClass() {}";
+
+            var result = Process(input);
+
+            _output.WriteLine(result);
+            Assert.Equal(expected, result);
+        }
+        [Fact]
+        public void SimpleObjectInitializerShouldBeProperlyFormatted()
+        {
+            var input = "var p = new MyClass();";
+
+            var expected = "var p = new MyClass();";
+
+            var result = Process(input);
+
+            _output.WriteLine(result);
+            Assert.Equal(expected, result);
+        }
     }
 }

@@ -12,15 +12,15 @@ namespace JoinCSharp.UnitTests
         [Fact]
         public void Visitor()
         {
-            string input = "class SomeClass {\r\n" +
-                "#if CONDITIONAL\r\n" +
-                "    void MyMethod1()\r\n" +
-                "    {\r\n" +
-                "    }\r\n" +
-                "#endif\r\n" +
-                "    void MyMethod2()\r\n" +
-                "    {\r\n" +
-                "    }\r\n" +
+            string input = "class SomeClass {" + Environment.NewLine + "" +
+                "#if CONDITIONAL" + Environment.NewLine + "" +
+                "    void MyMethod1()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
+                "#endif" + Environment.NewLine + "" +
+                "    void MyMethod2()" + Environment.NewLine + "" +
+                "    {" + Environment.NewLine + "" +
+                "    }" + Environment.NewLine + "" +
                 "}";
 
             SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(input);

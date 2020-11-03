@@ -1,6 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Formatting;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Options;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -10,6 +13,11 @@ namespace JoinCSharp
 
     static class MyFormatter
     {
+        static AdhocWorkspace workspace = new AdhocWorkspace();
+        static Solution solution = workspace.AddSolution(SolutionInfo.Create(SolutionId.CreateNewId("formatter"), VersionStamp.Default));
+        static OptionSet options = workspace.Options
+            .WithChangedOption(CSharpFormattingOptions.WrappingPreserveSingleLine, false);
+
         public static SyntaxNode Format(this SyntaxNode node)
             => node.NormalizeWhitespace().SingleLineProperties();
 
@@ -38,13 +46,28 @@ namespace JoinCSharp
                 ? base.VisitInterfaceDeclaration(node)
                 : node.FormatSingleLine();
 
+            public override SyntaxNode? VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
+            {
+                if (node.Initializer is null)
+                {
+                    return base.VisitObjectCreationExpression(node);
+                }
+                else if (!node.Initializer.Expressions.Any())
+                {
+                    return node.FormatSingleLine();
+                }
+                else
+                {
+                    return Formatter.Format(node, workspace, options.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInObjectCollectionArrayInitializers, true));
+                }
+            }
+
             [return: NotNullIfNotNull("node")]
             public override SyntaxNode? Visit(SyntaxNode? node)
             {
                 return base.Visit(node);
             }
         }
-
 
         private static SyntaxNode FormatSingleLine(this SyntaxNode node)
             => node.NormalizeWhitespace(indentation: "", eol: " ")
