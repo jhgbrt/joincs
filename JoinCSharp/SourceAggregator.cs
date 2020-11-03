@@ -75,14 +75,13 @@ namespace JoinCSharp
                 };
             }
 
-
             var cs = SyntaxFactory.CompilationUnit()
                 .AddUsings(Usings.Distinct(UsingComparer).OrderBy(u => u.Name.ToString()).ToArray())
                 .AddAttributeLists(attributeList)
                 .AddExterns(Externs.ToArray())
                 .AddMembers(namespaces.ToArray())
                 .AddMembers(Other.ToArray())
-                .NormalizeWhitespace();
+                .Format();
 
             return cs.ToFullString();
         }

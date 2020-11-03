@@ -34,15 +34,125 @@ namespace JoinCSharp.UnitTests
         }
 
         [Fact]
-        public void SimpleClass()
+        public void EmptyClass_IsFormattedOnOneLine()
         {
             var input = "class SomeClass {}";
 
             var result = Process(input);
 
+            var expected = "class SomeClass { }";
+
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+        }
+
+        [Fact]
+        public void NonEmptyClass_IsNotFormattedOnOneLine()
+        {
+            var input = "class SomeClass { private bool _b; }";
+
+            var result = Process(input);
+
             var expected = "class SomeClass\r\n" +
-                            "{\r\n" +
-                            "}";
+                "{\r\n" +
+                "    private bool _b;\r\n" +
+                "}";
+
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+        }
+        [Fact]
+        public void EmptyInterface_IsFormattedOnOneLine()
+        {
+            var input = "interface SomeClass {}";
+
+            var result = Process(input);
+
+            var expected = "interface SomeClass { }";
+
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+        }
+        [Fact]
+        public void NonEmptyInterface_IsNotFormattedOnOneLine()
+        {
+            var input = "interface SomeClass { private void M(); }";
+
+            var result = Process(input);
+
+            var expected = "interface SomeClass\r\n" +
+                "{\r\n" +
+                "    private void M();\r\n" +
+                "}";
+
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+        }
+
+        [Fact]
+        public void EmptyMethod_IsFormattedOnOneLine()
+        {
+            var input = "class SomeClass { private void M(){} }";
+
+            var result = Process(input);
+
+            var expected = "class SomeClass\r\n" +
+                "{\r\n" +
+                "    private void M() { }\r\n" +
+                "}";
+
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+        }
+        [Fact]
+        public void ExpressionMethod_IsFormattedOnOneLine()
+        {
+            var input = "class SomeClass { private int M() => 1; }";
+
+            var result = Process(input);
+
+            var expected = "class SomeClass\r\n" +
+                "{\r\n" +
+                "    private int M() => 1;\r\n" +
+                "}";
+
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+        }
+        [Fact]
+        public void ExpressionProperty_IsFormattedOnOneLine()
+        {
+
+            var input = "class SomeClass { private int M => 1; }";
+
+            var result = Process(input);
+
+            var expected = "class SomeClass\r\n" +
+                "{\r\n" +
+                "    private int M => 1;\r\n" +
+                "}";
+
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+        }
+        [Fact]
+        public void AutoProperty_IsFormattedOnOneLine()
+        {
+            var input = "class SomeClass { private int M {get;set;} }";
+
+            var result = Process(input);
+
+            var expected = "class SomeClass\r\n" +
+                "{\r\n" +
+                "    private int M { get; set; }\r\n" +
+                "}";
+
+            Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
+        }
+        [Fact]
+        public void ReadonlyProperty_IsFormattedOnOneLine()
+        {
+            var input = "class SomeClass { private int M {get;} }";
+
+            var result = Process(input);
+
+            var expected = "class SomeClass\r\n" +
+                "{\r\n" +
+                "    private int M { get; }\r\n" +
+                "}";
 
             Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
@@ -130,9 +240,7 @@ namespace JoinCSharp.UnitTests
                            "\r\n" +
                            "namespace Some.Namespace\r\n" +
                            "{\r\n" +
-                           "    class SomeClass\r\n" +
-                           "    {\r\n" +
-                           "    }\r\n" +
+                           "    class SomeClass { }\r\n" +
                            "}";
 
             Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
@@ -204,9 +312,7 @@ namespace JoinCSharp.UnitTests
 
             var expected = "namespace Abc.Def\r\n" +
                 "{\r\n" +
-                "    class ConditionalClass\r\n" +
-                "    {\r\n" +
-                "    }\r\n" +
+                "    class ConditionalClass { }\r\n" +
                 "}";
 
             Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
@@ -305,9 +411,7 @@ namespace JoinCSharp.UnitTests
             var result = Process(input);
 
             var expected = "// some comment\r\n" +
-                           "class SomeClass\r\n" +
-                           "{\r\n" +
-                           "}";
+                           "class SomeClass { }";
 
             Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
@@ -323,9 +427,7 @@ namespace JoinCSharp.UnitTests
                 "#endif\r\n" +
                 "}";
 
-            string expected = "class SomeClass\r\n" +
-                            "{\r\n" +
-                            "}";
+            string expected = "class SomeClass { }";
 
             var result = Process(input);
 
@@ -350,9 +452,7 @@ namespace JoinCSharp.UnitTests
 
             string expected = "class SomeClass\r\n" +
                               "{\r\n" +
-                              "    void MyMethod2()\r\n" +
-                              "    {\r\n" +
-                              "    }\r\n" +
+                              "    void MyMethod2() { }\r\n" +
                               "}";
 
             var result = Process(input, "CONDITIONAL2");
@@ -372,9 +472,7 @@ namespace JoinCSharp.UnitTests
 
             string expected = "namespace Abc.Def\r\n" +
                             "{\r\n" +
-                            "    class ConditionalClass\r\n" +
-                            "    {\r\n" +
-                            "    }\r\n" +
+                            "    class ConditionalClass { }\r\n" +
                             "}";
 
             var result = Process(input, new string[] { "CONDITIONAL" });
@@ -382,6 +480,22 @@ namespace JoinCSharp.UnitTests
             Assert.Equal(expected.HandleCrLf(), result.HandleCrLf());
         }
 
+        public void ObjectInitializerShouldBeProperlyFormatted()
+        {
+            var input = "var p = new MyClass { SomeProperty = \"SomeValue\" }";
+
+            var result = CSharpSyntaxTree.ParseText(input)
+                .GetRoot()
+                .NormalizeWhitespace()
+                .ToFullString();
+
+            var expected = "var p = new MyClass\r\n" +
+                "{\r\n" +
+                "    SomeProperty = \"SomeValue\"\r\n" +
+                "}";
+
+            Assert.Equal(expected, result);
+        }
 
     }
 }

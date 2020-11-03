@@ -63,9 +63,7 @@ namespace JoinCSharp.UnitTests
                 "    using static StaticClass;\r\n" +
                 "\r\n" +
                 "    // comment\r\n" +
-                "    class A\r\n" +
-                "    {\r\n" +
-                "    }\r\n" +
+                "    class A { }\r\n" +
                 "\r\n" +
                 "    class B\r\n" +
                 "    {\r\n" +
@@ -88,16 +86,12 @@ namespace JoinCSharp.UnitTests
                 "\r\n" +
                 "namespace Xkcd.WhatIf\r\n" +
                 "{\r\n" +
-                "    class G\r\n" +
-                "    {\r\n" +
-                "    }\r\n" +
+                "    class G { }\r\n" +
                 "}\r\n" +
                 "\r\n" +
                 "namespace Xyz.Vwu\r\n" +
                 "{\r\n" +
-                "    class E\r\n" +
-                "    {\r\n" +
-                "    }\r\n" +
+                "    class E { }\r\n" +
                 "}\r\n" +
                 "\r\nclass C\r\n" +
                 "{\r\n" +
@@ -131,9 +125,7 @@ namespace JoinCSharp.UnitTests
                 "    using static StaticClass;\r\n" +
                 "\r\n" +
                 "    // comment\r\n" +
-                "    class A\r\n" +
-                "    {\r\n" +
-                "    }\r\n" +
+                "    class A { }\r\n" +
                 "\r\n" +
                 "    class B\r\n" +
                 "    {\r\n" +
@@ -143,9 +135,7 @@ namespace JoinCSharp.UnitTests
                 "        }\r\n" +
                 "    }\r\n" +
                 "\r\n" +
-                "    class ConditionalClass\r\n" +
-                "    {\r\n" +
-                "    }\r\n" +
+                "    class ConditionalClass { }\r\n" +
                 "}\r\n" +
                 "\r\n" +
                 "namespace Abc.Def.Ghi\r\n" +
@@ -161,16 +151,12 @@ namespace JoinCSharp.UnitTests
                 "\r\n" +
                 "namespace Xkcd.WhatIf\r\n" +
                 "{\r\n" +
-                "    class G\r\n" +
-                "    {\r\n" +
-                "    }\r\n" +
+                "    class G { }\r\n" +
                 "}\r\n" +
                 "\r\n" +
                 "namespace Xyz.Vwu\r\n" +
                 "{\r\n" +
-                "    class E\r\n" +
-                "    {\r\n" +
-                "    }\r\n" +
+                "    class E { }\r\n" +
                 "}\r\n" +
                 "\r\n" +
                 "class C\r\n" +

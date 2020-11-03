@@ -2,7 +2,7 @@
   "profiles": {
     "JoinCSharp": {
       "commandName": "Project",
-      "commandLineArgs": "--input=..\\Net.Code.ADONet --output=Db.cs --ignore-assembly-attributes",
+      "commandLineArgs": "--input=..\\Net.Code.ADONet --output=.\\netstandard\\Db.cs --preprocessor-directives=NETSTANDARD",
       "workingDirectory": "F:\\Repos\\yadal\\Net.Code.ADONet.SingleFile"
     }
   }
