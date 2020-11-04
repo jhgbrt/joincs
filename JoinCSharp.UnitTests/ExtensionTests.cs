@@ -69,7 +69,7 @@ namespace JoinCSharp.UnitTests
                 PathBuilder.FromRoot().WithSubFolders("A", "AE").WithFileName("AAF.txt").FileInfo.FullName
             };
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -78,7 +78,7 @@ namespace JoinCSharp.UnitTests
             string expected = string.Empty;
             string input = string.Empty;
             string result = input.Preprocess();
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void Preprocess_OnlyConditional_BecomesEmpty()
@@ -88,7 +88,7 @@ namespace JoinCSharp.UnitTests
                 "#if WHATEVER" + Environment.NewLine +
                 "#endif";
             string result = input.Preprocess();
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void Preprocess_AdditionalWhitespace_BecomesEmpty()
@@ -98,7 +98,7 @@ namespace JoinCSharp.UnitTests
                 "   #if   WHATEVER\t " + Environment.NewLine +
                 "\t #endif";
             string result = input.Preprocess();
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void Preprocess_AdditionalWhitespace_Negative_BecomesEmpty()
@@ -108,7 +108,7 @@ namespace JoinCSharp.UnitTests
                 "   #if   !WHATEVER\t " + Environment.NewLine +
                 "\t #endif";
             string result = input.Preprocess();
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void Preprocess_NoWhitespace_Negative_BecomesEmpty()
@@ -118,7 +118,7 @@ namespace JoinCSharp.UnitTests
                 "#if !WHATEVER\t " + Environment.NewLine +
                 "\t #endif";
             string result = input.Preprocess();
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void Preprocess_InvalidDirective_NotTouched()
@@ -130,7 +130,7 @@ namespace JoinCSharp.UnitTests
                 "#if" + Environment.NewLine +
                 "#endif";
             string result = input.Preprocess();
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void Preprocess_InvalidNegativeDirective_NotTouched()
@@ -142,7 +142,7 @@ namespace JoinCSharp.UnitTests
                 "#if !" + Environment.NewLine +
                 "#endif";
             string result = input.Preprocess();
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void Preprocess_InvalidNegativeDirective2_NotTouched()
@@ -154,7 +154,7 @@ namespace JoinCSharp.UnitTests
                 "#if!" + Environment.NewLine +
                 "#endif";
             string result = input.Preprocess();
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -173,7 +173,7 @@ namespace JoinCSharp.UnitTests
             var result = input.Preprocess();
             var expected = input;
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void Preprocess_WithConditionals_Stripped()
@@ -199,7 +199,7 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess();
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void Preprocess_WithNegativeConditionals_Stripped()
@@ -228,7 +228,7 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess();
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -255,7 +255,7 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess("CONDITIONAL");
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
 
@@ -286,7 +286,7 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess("CONDITIONAL");
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -303,7 +303,7 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess("FOO");
             var expected = "FOO";
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
 
@@ -321,7 +321,7 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess("BAR");
             var expected = "BAR";
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -336,7 +336,7 @@ namespace JoinCSharp.UnitTests
 
             var result = input.Preprocess("DEBUG");
             var expected = "DEBUG";
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
     }
 }

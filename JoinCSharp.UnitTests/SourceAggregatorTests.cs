@@ -37,7 +37,7 @@ namespace JoinCSharp.UnitTests
                             "    C" + Environment.NewLine + "" +
                             "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -49,7 +49,7 @@ namespace JoinCSharp.UnitTests
 
             var expected = "class SomeClass { }";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -64,7 +64,7 @@ namespace JoinCSharp.UnitTests
                 "    private bool _b;" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void EmptyInterface_IsFormattedOnOneLine()
@@ -75,7 +75,7 @@ namespace JoinCSharp.UnitTests
 
             var expected = "interface SomeClass { }";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void NonEmptyInterface_IsNotFormattedOnOneLine()
@@ -89,7 +89,7 @@ namespace JoinCSharp.UnitTests
                 "    private void M();" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -104,7 +104,7 @@ namespace JoinCSharp.UnitTests
                 "    private void M() { }" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void ExpressionMethod_IsFormattedOnOneLine()
@@ -118,7 +118,7 @@ namespace JoinCSharp.UnitTests
                 "    private int M() => 1;" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void ExpressionProperty_IsFormattedOnOneLine()
@@ -133,7 +133,7 @@ namespace JoinCSharp.UnitTests
                 "    private int M => 1;" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void AutoProperty_IsFormattedOnOneLine()
@@ -147,7 +147,7 @@ namespace JoinCSharp.UnitTests
                 "    private int M { get; set; }" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void ReadonlyProperty_IsFormattedOnOneLine()
@@ -161,7 +161,7 @@ namespace JoinCSharp.UnitTests
                 "    private int M { get; }" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -173,7 +173,7 @@ namespace JoinCSharp.UnitTests
 
             var expected = "extern alias SomeAlias;";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -185,7 +185,7 @@ namespace JoinCSharp.UnitTests
 
             var expected = "using SomeNamespace;" + Environment.NewLine + "" + Environment.NewLine + "[assembly: SomeAttribute()]";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -197,7 +197,7 @@ namespace JoinCSharp.UnitTests
 
             var expected = "using SomeNamespace;" + Environment.NewLine + "" + Environment.NewLine + "[assembly: MyAttribute(), SomeAttribute()]";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -216,7 +216,7 @@ namespace JoinCSharp.UnitTests
                            "" + Environment.NewLine + "" +
                            "[assembly: SomeAttribute1(), SomeAttribute2()]";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -233,7 +233,7 @@ namespace JoinCSharp.UnitTests
 
             var expected = "using SomeNamespace;";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -250,7 +250,7 @@ namespace JoinCSharp.UnitTests
                            "    class SomeClass { }" + Environment.NewLine + "" +
                            "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void TwoSameUsingsAreGrouped()
@@ -259,7 +259,7 @@ namespace JoinCSharp.UnitTests
             var result = Process(input);
             var expected = "using MyUsing;";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void TwoDifferentUsingsAreOrdered()
@@ -267,7 +267,7 @@ namespace JoinCSharp.UnitTests
             var input = "using MyUsing2;\r\nusing MyUsing1;";
             var result = Process(input);
             const string expected = "using MyUsing1;\r\nusing MyUsing2;";
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void StaticUsingInNamespace()
@@ -280,7 +280,7 @@ namespace JoinCSharp.UnitTests
                 "{" + Environment.NewLine + "" +
                 "    using static SomeClass;" + Environment.NewLine + "" +
                 "}";
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -290,7 +290,7 @@ namespace JoinCSharp.UnitTests
             var result = Process(input, "CONDITIONAL");
             const string expected = "using MyUsing;";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -300,7 +300,7 @@ namespace JoinCSharp.UnitTests
             var result = Process(input, "CONDITIONAL");
             const string expected = "using MyUsing;\r\nusing MyUsing1;";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
 
@@ -322,7 +322,7 @@ namespace JoinCSharp.UnitTests
                 "    class ConditionalClass { }" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void SimpleUsing()
@@ -332,7 +332,7 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input, new string[] { "CONDITIONAL" });
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -344,7 +344,7 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input, Array.Empty<string>());
             var expected = string.Empty;
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -358,7 +358,7 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input, "CONDITIONAL");
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -384,7 +384,7 @@ namespace JoinCSharp.UnitTests
                 "{" + Environment.NewLine + "" +
                 "}";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void ProcessUsings()
@@ -394,7 +394,7 @@ namespace JoinCSharp.UnitTests
             string result = Process(input);
 
             const string expected = "using MyUsing1;\r\nusing MyUsing2;";
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -407,7 +407,7 @@ namespace JoinCSharp.UnitTests
         "#endif";
             string result = Process(input, "CONDITIONAL");
             const string expected = "using MyUsing1;\r\nusing MyUsing2;";
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -420,7 +420,7 @@ namespace JoinCSharp.UnitTests
             var expected = "// some comment" + Environment.NewLine + "" +
                            "class SomeClass { }";
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -438,7 +438,7 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input);
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -464,7 +464,7 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input, "CONDITIONAL2");
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -484,7 +484,7 @@ namespace JoinCSharp.UnitTests
 
             var result = Process(input, new string[] { "CONDITIONAL" });
 
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -519,7 +519,7 @@ namespace JoinCSharp.UnitTests
             var result = Process(input);
 
             _output.WriteLine(result);
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -532,7 +532,7 @@ namespace JoinCSharp.UnitTests
             var result = Process(input);
 
             _output.WriteLine(result);
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void SimpleObjectInitializerShouldBeProperlyFormatted()
@@ -544,7 +544,7 @@ namespace JoinCSharp.UnitTests
             var result = Process(input);
 
             _output.WriteLine(result);
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
     }
 }

@@ -103,7 +103,7 @@ namespace JoinCSharp.UnitTests
                 "}";
 
             ShowInteractiveDiffIfDifferent(result, expected);
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
 
@@ -169,7 +169,7 @@ namespace JoinCSharp.UnitTests
                 "}";
 
             ShowInteractiveDiffIfDifferent(result, expected);
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
         static Lazy<string> winmerge = new Lazy<string>(() => new[]
