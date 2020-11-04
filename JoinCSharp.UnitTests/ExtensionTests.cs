@@ -69,7 +69,7 @@ namespace JoinCSharp.UnitTests
                 PathBuilder.FromRoot().WithSubFolders("A", "AE").WithFileName("AAF.txt").FileInfo.FullName
             };
 
-            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
+            Assert.Equal(expected, result);
         }
 
         [Fact]
