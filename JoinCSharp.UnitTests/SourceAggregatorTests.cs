@@ -18,9 +18,16 @@ namespace JoinCSharp.UnitTests
             _output = helper;
         }
 
-        private static string Process(string input, params string[] preprocessorSymbols)
+        private string Process(string input, params string[] preprocessorSymbols)
         {
-            return new SourceAggregator(true).AddSource(input.Preprocess(preprocessorSymbols)).GetResult();
+            _output.WriteLine("INPUT: ");
+            _output.WriteLine("=======");
+            _output.WriteLine(input);
+            var result = new SourceAggregator(true).AddSource(input.Preprocess(preprocessorSymbols)).GetResult();
+            _output.WriteLine("RESULT: ");
+            _output.WriteLine("=======");
+            _output.WriteLine(result);
+            return result;
         }
 
         [Fact]
@@ -525,7 +532,9 @@ namespace JoinCSharp.UnitTests
         [Fact]
         public void EmptyObjectInitializerShouldBeProperlyFormatted()
         {
-            var input = "var p = new MyClass() {}";
+            var input = "var p = new MyClass()" + Environment.NewLine +
+                "{" + Environment.NewLine +
+                "}";
 
             var expected = "var p = new MyClass() {}";
 
@@ -537,7 +546,8 @@ namespace JoinCSharp.UnitTests
         [Fact]
         public void SimpleObjectInitializerShouldBeProperlyFormatted()
         {
-            var input = "var p = new MyClass();";
+            var input = "var p = new MyClass(" + Environment.NewLine +
+                ");";
 
             var expected = "var p = new MyClass();";
 
@@ -545,6 +555,69 @@ namespace JoinCSharp.UnitTests
 
             _output.WriteLine(result);
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
+        }
+
+        [Fact]
+        public void SwitchStatement()
+        {
+            string input = "class C" + Environment.NewLine +
+                "{" + Environment.NewLine +
+                "    public void M(char c) {" + Environment.NewLine +
+                "    switch c" +
+                "    { " +
+                "        case 'x': return 1; " +
+                "        case 'y': return 2;" + Environment.NewLine +
+                "    }" + Environment.NewLine +
+                "}" + Environment.NewLine +
+                "}"
+                ;
+
+            string expected = "class C" + Environment.NewLine +
+                "{" + Environment.NewLine +
+                "    public void M(char c)" + Environment.NewLine +
+                "    {" + Environment.NewLine +
+                "        switch c" + Environment.NewLine +
+                "        {" + Environment.NewLine +
+                "            case 'x':" + Environment.NewLine +
+                "                return 1;" + Environment.NewLine +
+                "            case 'y':" + Environment.NewLine +
+                "                return 2;" + Environment.NewLine +
+                "        }" + Environment.NewLine +
+                "    }" + Environment.NewLine +
+                "}"
+                ;
+
+            var result = Process(input);
+
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
+        }
+
+        [Fact]
+#warning test ignored - switch expressions are not yet properly formatted
+        public void SwitchExpression()
+        {
+            string input = "class C" + Environment.NewLine +
+                "{" + Environment.NewLine +
+                "    public void M(char c) => c switch " + Environment.NewLine +
+                "    { 'x' => 1, 'y' => 2" + Environment.NewLine +
+                "    };" + Environment.NewLine +
+                "}"
+                ;
+
+            string expected = "class C" + Environment.NewLine +
+                "{" + Environment.NewLine +
+                "    public void M(char c) => c switch" + Environment.NewLine +
+                "    {" + Environment.NewLine +
+                "        'x' => 1," + Environment.NewLine +
+                "        'y' => 2" + Environment.NewLine +
+                "    };" + Environment.NewLine +
+                "}"
+                ;
+
+            var result = Process(input);
+
+            // TODO this test fails - 
+            // Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
     }
 }

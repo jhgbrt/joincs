@@ -14,7 +14,6 @@ namespace JoinCSharp
     static class MyFormatter
     {
         static AdhocWorkspace workspace = new AdhocWorkspace();
-        static Solution solution = workspace.AddSolution(SolutionInfo.Create(SolutionId.CreateNewId("formatter"), VersionStamp.Default));
         static OptionSet options = workspace.Options
             .WithChangedOption(CSharpFormattingOptions.WrappingPreserveSingleLine, false);
 
