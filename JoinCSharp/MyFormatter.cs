@@ -45,27 +45,15 @@ namespace JoinCSharp
                 ? base.VisitInterfaceDeclaration(node)
                 : node.FormatSingleLine();
 
-            public override SyntaxNode? VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
+            public override SyntaxNode? VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) => node switch
             {
-                if (node.Initializer is null)
-                {
-                    return base.VisitObjectCreationExpression(node);
-                }
-                else if (!node.Initializer.Expressions.Any())
-                {
-                    return node.FormatSingleLine();
-                }
-                else
-                {
-                    return Formatter.Format(node, workspace, options.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInObjectCollectionArrayInitializers, true));
-                }
-            }
+                { Initializer: null } => base.VisitObjectCreationExpression(node),
+                { Initializer: not null } when !node.Initializer.Expressions.Any() => node.FormatSingleLine(),
+                _ => Formatter.Format(node, workspace, options.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInObjectCollectionArrayInitializers, true))
+            };
 
             [return: NotNullIfNotNull("node")]
-            public override SyntaxNode? Visit(SyntaxNode? node)
-            {
-                return base.Visit(node);
-            }
+            public override SyntaxNode? Visit(SyntaxNode? node) => base.Visit(node);
         }
 
         private static SyntaxNode FormatSingleLine(this SyntaxNode node)

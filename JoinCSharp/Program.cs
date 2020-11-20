@@ -17,13 +17,18 @@ static class Program
     /// <param name="includeAssemblyAttributes"></param>
     /// <param name="preprocessorDirectives">A list of preprocessor directives that should be defined. Code between undefined #if/#endif directives is ignored.</param>
     /// <returns></returns>
-    public static async Task<int> Main(DirectoryInfo input, FileInfo? output = null, bool includeAssemblyAttributes = false, string[]? preprocessorDirectives = null)
+    public static async Task<int> Main(
+        DirectoryInfo input,
+        FileInfo? output = null,
+        bool includeAssemblyAttributes = false,
+        string[]? preprocessorDirectives = null)
     {
         if (input == null)
         {
             Console.Error.WriteLine("input folder is required");
             return 1;
         }
+
         if (!input.Exists)
         {
             Console.Error.WriteLine("input folder does not exist");

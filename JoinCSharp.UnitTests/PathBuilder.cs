@@ -10,7 +10,8 @@ namespace JoinCSharp.UnitTests
     {
         public static PathBuilder FromRoot() => new DirectoryPathBuilder(Path.DirectorySeparatorChar.ToString());
         public static PathBuilder Directory(params string[] folderPath) => new DirectoryPathBuilder(folderPath);
-        public static PathBuilder File(params string[] fullPath) => fullPath.Length >= 1
+        public static PathBuilder File(params string[] fullPath) => 
+            fullPath.Length >= 1
             ? new FilePathBuilder(fullPath.Take(fullPath.Length - 1), fullPath.Last())
             : new FilePathBuilder(Enumerable.Empty<string>(), string.Empty);
 

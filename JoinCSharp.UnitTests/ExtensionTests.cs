@@ -306,11 +306,20 @@ namespace JoinCSharp.UnitTests
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
-
         [Fact]
-        public void Preprocess_IfElIf()
+        public void Preprocess_IfElse2()
         {
-            var input = 
+            var input =
+                "#if FOO" + Environment.NewLine + "" +
+                "FOO" + Environment.NewLine + "" +
+                "#elif BAR" + Environment.NewLine + "" +
+                "BAR" + Environment.NewLine + "" +
+                "#else" + Environment.NewLine + "" +
+                "BAZ" + Environment.NewLine + "" +
+                "#endif" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
+                "HELLO" + Environment.NewLine + "" +
+                "" + Environment.NewLine + "" +
                 "#if FOO" + Environment.NewLine + "" +
                 "FOO" + Environment.NewLine + "" +
                 "#elif BAR" + Environment.NewLine + "" +
@@ -318,9 +327,61 @@ namespace JoinCSharp.UnitTests
                 "#else" + Environment.NewLine + "" +
                 "BAZ" + Environment.NewLine + "" +
                 "#endif";
+            ;
+
+            var result = input.Preprocess("FOO");
+            var expected = "FOO\r\n\r\nHELLO\r\n\r\nFOO";
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
+        }
+
+        [Fact]
+        public void Preprocess_IfInvalid()
+        {
+            var input =
+                "#ifFOO" + Environment.NewLine + "" +
+                "FOO" + Environment.NewLine + "" +
+                "#elif BAR" + Environment.NewLine + "" +
+                "BAR" + Environment.NewLine + "" +
+                "#else" + Environment.NewLine + "" +
+                "BAZ" + Environment.NewLine + "" +
+                "#endif";
+
+            var result = input.Preprocess("FOO");
+            var expected = input;
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
+        }
+
+
+        [Fact]
+        public void Preprocess_IfElIf()
+        {
+            var input =
+               "#if FOO" + Environment.NewLine + "" +
+               "FOO" + Environment.NewLine + "" +
+               "#elif BAR" + Environment.NewLine + "" +
+               "BAR" + Environment.NewLine + "" +
+               "#else" + Environment.NewLine + "" +
+               "BAZ" + Environment.NewLine + "" +
+               "#endif";
 
             var result = input.Preprocess("BAR");
             var expected = "BAR";
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
+        }
+        [Fact]
+        public void Preprocess_IfElIfInvalid()
+        {
+            var input =
+               "#if FOO" + Environment.NewLine + "" +
+               "FOO" + Environment.NewLine + "" +
+               "#elifBAR" + Environment.NewLine + "" +
+               "BAR" + Environment.NewLine + "" +
+               "#else" + Environment.NewLine + "" +
+               "BAZ" + Environment.NewLine + "" +
+               "#endif";
+
+            var result = input.Preprocess("BAR");
+            var expected = "BAZ";
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 

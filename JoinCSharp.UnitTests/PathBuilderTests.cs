@@ -58,5 +58,15 @@ namespace JoinCSharp.UnitTests
 
             Assert.Equal(builder.ToString(), builder.FullName);
         }
+
+        //[Theory]
+        //[InlineData("")]
+        //[InlineData("test.txt", "test.txt")]
+        //[InlineData("test.txt", "subfolder", "test.txt")]
+        //public void PathBuilderX(string expected, params string[] parts)
+        //{
+        //    var result = PathBuilder.File(parts).FileInfo.Name;
+        //    Assert.Equal(@"test.txt", result);
+        //}
     }
 }
