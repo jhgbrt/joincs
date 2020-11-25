@@ -41,20 +41,27 @@ static class Program
             .Select(d => d.FullName)
             .ToArray();
 
-        var result = input
-            .EnumerateFiles("*.cs", SearchOption.AllDirectories)
-            .Where(f => !binobj.Any(d => f.DirectoryName?.StartsWith(d) ?? false))
-            .ReadLines()
-            .Preprocess(preprocessorDirectives)
-            .Aggregate(includeAssemblyAttributes);
+        try
+        {
+            var result = input
+                .EnumerateFiles("*.cs", SearchOption.AllDirectories)
+                .Where(f => !binobj.Any(d => f.DirectoryName?.StartsWith(d) ?? false))
+                .ReadLines()
+                .Preprocess(preprocessorDirectives)
+                .Aggregate(includeAssemblyAttributes);
 
-        if (output != null)
-        {
-            await File.WriteAllTextAsync(output.FullName, result);
+            if (output != null)
+            {
+                await File.WriteAllTextAsync(output.FullName, result);
+            }
+            else
+            {
+                await Console.Out.WriteAsync(result);
+            }
         }
-        else
+        catch (InvalidPreprocessorDirectiveException e)
         {
-            await Console.Out.WriteAsync(result);
+            Console.WriteLine(e.Message);
         }
 
         return 0;

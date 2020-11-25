@@ -39,7 +39,7 @@ namespace JoinCSharp
 
         static State OutsideIfDirective(State state, string line) => GetDirective(line) switch
         {
-            IfDirective { IsValid: false } => state.Yield(line),
+            IfDirective { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
             IfDirective ifd when ifd.CodeShouldBeIncluded(state.Directives) => state with { Next = KeepingCode },
             IfDirective => state with { Next = SkippingCode },
             _ => state.Yield(line)
@@ -67,7 +67,7 @@ namespace JoinCSharp
                 _ => state
             }
         };
-        static object? GetDirective(string line) => line.AsSpan().TrimStart() switch
+        static object? GetDirective(string line) => line.AsSpan().TrimStart("") switch
         {
             Span { Length: 0 } => default,
             Span s when s[0] != '#' => default,
@@ -75,7 +75,7 @@ namespace JoinCSharp
             Span s when s.StartsWith("#elif ") => ElseIfDirective.From(s[5..]),
             Span s when s.StartsWith("#else") => ElseDirective.Instance,
             Span s when s.StartsWith("#endif") => EndIfDirective.Instance,
-            _ => default
+            _ => throw new InvalidPreprocessorDirectiveException("CS1024 - Invalid preprocessor directive: {}")
         };
 
         record IfDirective(bool Not, string Symbol)
@@ -117,6 +117,21 @@ namespace JoinCSharp
             }
             string symbol = new(span[(index + 1)..].Trim());
             return (not, symbol);
+        }
+    }
+
+    public class InvalidPreprocessorDirectiveException: Exception
+    {
+        public InvalidPreprocessorDirectiveException() : base()
+        {
+        }
+
+        public InvalidPreprocessorDirectiveException(string? message) : base(message)
+        {
+        }
+
+        public InvalidPreprocessorDirectiveException(string? message, Exception? innerException) : base(message, innerException)
+        {
         }
     }
 }
