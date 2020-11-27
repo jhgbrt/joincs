@@ -10,19 +10,19 @@ namespace JoinCSharp
         internal static IEnumerable<string> Preprocess(this IEnumerable<IEnumerable<string>> input, params string[] directives)
             => input.Select(x => string.Join(Environment.NewLine, x.Preprocess(_ => {}, directives)));
 
-        private record State(Func<State, string, State> Next, string[] Directives, bool Done)
+        private record State(Func<State, string, int, State> Next, string[] Directives, bool Done)
         {
             internal State Push()
             {
                 _stack.Push(this);
-                return this;
+                return this with { NonBlankLinesYielded = NonBlankLinesYielded + 1 };
             }
-            internal State Reset() => _stack.Pop() with { Done = false };
+            internal State Reset() => _stack.Pop() with { Done = false, NonBlankLinesYielded = this.NonBlankLinesYielded };
             internal State Peek() => _stack.Peek();
             internal State Yield(string line)
             {
                 _lines.Add(line);
-                return this;
+                return this with { NonBlankLinesYielded = NonBlankLinesYielded + (string.IsNullOrWhiteSpace(line) ? 0 : 1) };
             }
             internal IEnumerable<string> GetLines()
             {
@@ -33,22 +33,42 @@ namespace JoinCSharp
             internal State RemoveDirective(string directive) => this with { Directives = Directives.Except(new[] { directive }).ToArray() };
             private Stack<State> _stack = new();
             private readonly List<string> _lines = new();
+            internal int NonBlankLinesYielded { get; private set; }
 
             public override string ToString()
                 =>
                 $"Method = {Next.Method.Name}, " +
                 $"Stack = {string.Join(",", _stack.Select(f => f.Next.Method.Name))}, " +
-                $"Lines = {string.Join("\\r\\n", _lines)}";
+                $"Lines = {string.Join("\\r\\n", _lines)}, " +
+                $"NonBlankLines = {NonBlankLinesYielded}";
+
+            internal object? GetDirective(string line) => line.AsSpan().Trim("") switch
+            {
+                Span s when s.Length == 0 => default,
+                Span s when !s.StartsWith("#") => default,
+                Span s when s.StartsWith("#if ") => If.From(s[3..]),
+                Span s when s.StartsWith("#elif ") => ElIf.From(s[5..]),
+                Span s when s.StartsWith("#else") && s.Length == 5 => new Else(),
+                Span s when s.StartsWith("#endif") => new EndIf(),
+                Span s when s.StartsWith("#error") => new Error(s.Length >= 7 ? s[7..].ToString() : string.Empty),
+                Span s when s.StartsWith("#warning") => default,
+                Span s when s.StartsWith("#line") => default,
+                Span s when s.StartsWith("#region") => default,
+                Span s when s.StartsWith("#endregion") => default,
+                Span s when s.StartsWith("#define ") => new Define(s[8..].ToString()),
+                Span s when s.StartsWith("#undef ") => new Undefine(s[7..].ToString()),
+                _ => throw new PreprocessorException("CS1024 - Invalid preprocessor directive")
+            };
         }
 
         internal static IEnumerable<string> Preprocess(this IEnumerable<string> input, Action<string> log, params string[] directives)
         {
-            var state = new State(BeginningOfFile, directives, false);
-            foreach (string line in input)
+            var state = new State(OutsideIfDirective, directives, false);
+            foreach ((string line, int i) in input.Select((s,i) => (s,i)))
             {
                 log?.Invoke(state.ToString());
                 log?.Invoke(line);
-                state = state.Next(state, line);
+                state = state.Next(state, line, i);
                 log?.Invoke($"-> {state}");
                 log?.Invoke("");
                 foreach (var l in state.GetLines())
@@ -56,28 +76,20 @@ namespace JoinCSharp
             }
         }
 
-        private static State BeginningOfFile(State state, string line) => GetDirective(line) switch
-        {
-            If { IsValid: false } => throw new PreprocessorException(),
-            If ifd when ifd.CodeShouldBeIncluded(state.Directives) => (state with { Next = OutsideIfDirective }).Push() with { Next = KeepingCode },
-            If ifd => (state with { Next = OutsideIfDirective }).Push() with { Next = SkippingCode },
-            Error e => throw new PreprocessorException(e.Message),
-            Define d => state.AddDirective(d.Symbol),
-            Undefine d => state.RemoveDirective(d.Symbol),
-            _ when string.IsNullOrWhiteSpace(line) => state.Yield(line),
-            _ => state.Yield(line) with { Next = OutsideIfDirective }
-        };
-        private static State OutsideIfDirective(State state, string line) => GetDirective(line) switch
+        private static State OutsideIfDirective(State state, string line, int lineNumber) => state.GetDirective(line) switch
         {
             If { IsValid: false } => throw new PreprocessorException(),
             If ifd when ifd.CodeShouldBeIncluded(state.Directives) => state.Push() with { Next = KeepingCode },
             If ifd => state.Push() with { Next = SkippingCode },
             Error e => throw new PreprocessorException(e.Message),
-            Define or Undefine => throw new PreprocessorException("CS1032: Cannot define/undefine preprocessor symbols after first token in file"),
+            Define or Undefine when state.NonBlankLinesYielded > 0 => throw new PreprocessorException("CS1032: Cannot define/undefine preprocessor symbols after first token in file"),
+            Define d => state.AddDirective(d.Symbol),
+            Undefine d => state.RemoveDirective(d.Symbol),
+            _ when string.IsNullOrWhiteSpace(line) => state.Yield(line),
             _ => state.Yield(line)
         };
 
-        private static State KeepingCode(State state, string line) => GetDirective(line) switch
+        private static State KeepingCode(State state, string line, int lineNumber) => state.GetDirective(line) switch
         {
             If { IsValid: false } => throw new PreprocessorException(),
             If ifd when ifd.CodeShouldBeIncluded(state.Directives) => state.Push(),
@@ -89,9 +101,9 @@ namespace JoinCSharp
             _ => state.Yield(line)
         };
 
-        private static State SkippingCode(State state, string line) => state switch
+        private static State SkippingCode(State state, string line, int lineNumber) => state switch
         {
-            { Done: true } => GetDirective(line) switch
+            { Done: true } => state.GetDirective(line) switch
             {
                 If { IsValid: false } => throw new PreprocessorException(),
                 If ifd => state.Push(),
@@ -99,7 +111,7 @@ namespace JoinCSharp
                 Define or Undefine => throw new PreprocessorException("CS1032: Cannot define/undefine preprocessor symbols after first token in file"),
                 _ => state
             },
-            { Done: false } => GetDirective(line) switch
+            { Done: false } => state.GetDirective(line) switch
             {
                 If { IsValid: false } => throw new PreprocessorException(),
                 If ifd => state.Push(),
@@ -114,23 +126,6 @@ namespace JoinCSharp
             }
         };
 
-        private static object? GetDirective(string line) => line.AsSpan().Trim("") switch
-        {
-            Span { Length: 0 } => default,
-            Span s when s[0] != '#' => default,
-            Span s when s.StartsWith("#if ") => If.From(s[3..]),
-            Span s when s.StartsWith("#elif ") => ElIf.From(s[5..]),
-            Span s when s.StartsWith("#else") && s.Length == 5 => Else.Instance,
-            Span s when s.StartsWith("#endif") => EndIf.Instance,
-            Span s when s.StartsWith("#error") => Error.From(s.Length >= 7 ? s[7..] : string.Empty),
-            Span s when s.StartsWith("#warning") => default,
-            Span s when s.StartsWith("#line") => default,
-            Span s when s.StartsWith("#region") => default,
-            Span s when s.StartsWith("#endregion") => default,
-            Span s when s.StartsWith("#define ") => Define.From(s[8..]),
-            Span s when s.StartsWith("#undef ") => Undefine.From(s[7..]),
-            _ => throw new PreprocessorException("CS1024 - Invalid preprocessor directive: {}")
-        };
 
         record If(bool Not, string Symbol)
         {
@@ -155,29 +150,11 @@ namespace JoinCSharp
             public bool CodeShouldBeIncluded(string[] directives) => directives.Any(directive => Symbol == directive) ? !Not : Not;
         }
 
-        record EndIf
-        {
-            public static EndIf Instance = new();
-        }
-
-        record Else
-        {
-            public static Else Instance = new();
-        }
-
-        record Error(string Message)
-        {
-            public static Error From(Span message) => new Error(message.ToString());
-        }
-
-        record Define(string Symbol)
-        {
-            public static Define From(Span symbol) => new Define(symbol.ToString());
-        }
-        record Undefine(string Symbol)
-        {
-            public static Undefine From(Span symbol) => new Undefine(symbol.ToString());
-        }
+        record EndIf;
+        record Else;
+        record Error(string Message);
+        record Define(string Symbol);
+        record Undefine(string Symbol);
 
         private static (bool not, string symbol) Parse(Span span)
         {

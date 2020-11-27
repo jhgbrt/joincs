@@ -419,10 +419,15 @@ namespace JoinCSharp.UnitTests
             Assert.Equal(expected, e.Message);
         }
 
-        [Fact]
-        public void Define_NotAtStart_Throws()
+        [Theory]
+        [InlineData("BLA\r\n#define FOO")]
+        [InlineData("#if FOO\r\n#define FOO")]
+        [InlineData("#if FOO\r\n#elif BAR\r\n#define FOO")]
+        [InlineData("#if FOO\r\n#else\r\n#define FOO")]
+        [InlineData("#if FOO\r\n#elif BAR\r\n#else BAT\r\n#endif\r\n#define FOO")]
+        [InlineData("#if FOO\r\n#endif\r\n#define FOO")]
+        public void Define_NotAtStart_Throws(string input)
         {
-            var input = "BLA\r\n#define FOO";
             Assert.Throws<PreprocessorException>(() => input.Preprocess(_helper));
         }
 
@@ -440,6 +445,7 @@ namespace JoinCSharp.UnitTests
         [InlineData("#if FOO\r\n#elif BAR\r\n#undef FOO")]
         [InlineData("#if FOO\r\n#else\r\n#undef FOO")]
         [InlineData("#if FOO\r\n#elif BAR\r\n#else BAT\r\n#endif\r\n#undef FOO")]
+        [InlineData("#if FOO\r\n#endif\r\n#undef FOO")]
         public void UnDefine_NotAtStart_Throws(string input)
         {
             Assert.Throws<PreprocessorException>(() => input.Preprocess(_helper));
