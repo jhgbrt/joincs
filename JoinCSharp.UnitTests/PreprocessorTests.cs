@@ -436,7 +436,7 @@ namespace JoinCSharp.UnitTests
         {
             var input = "\r\n#define FOO\r\n#if FOO\r\nFOO\r\n#endif";
             var result = input.Preprocess(_helper);
-            Assert.Equal("\r\nFOO", result);
+            Assert.Equal("\r\nFOO", result, ignoreLineEndingDifferences: true);
         }
 
         [Theory]
