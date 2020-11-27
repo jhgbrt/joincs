@@ -117,19 +117,19 @@ namespace JoinCSharp.UnitTests
         public void Preprocess_InvalidDirective_NotTouched()
         {
             string input = "#if\r\n";
-            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess(_helper));
+            Assert.Throws<PreprocessorException>(() => input.Preprocess(_helper));
         }
         [Fact]
         public void Preprocess_InvalidNegativeDirective_NotTouched()
         {
             string input = "#if !\r\n";
-            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess(_helper));
+            Assert.Throws<PreprocessorException>(() => input.Preprocess(_helper));
         }
         [Fact]
         public void Preprocess_InvalidNegativeDirective2_NotTouched()
         {
             string input = "#if!\r\n";
-            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess(_helper));
+            Assert.Throws<PreprocessorException>(() => input.Preprocess(_helper));
         }
 
         [Fact]
@@ -153,7 +153,7 @@ namespace JoinCSharp.UnitTests
         [Fact]
         public void Preprocess_WithConditionals_Stripped()
         {
-            string input = 
+            string input =
                 "class SomeClass {\r\n" +
                 "#if CONDITIONAL\r\n" +
                 "    void MyMethod1()\r\n" +
@@ -165,7 +165,7 @@ namespace JoinCSharp.UnitTests
                 "    }\r\n" +
                 "}";
 
-            string expected = 
+            string expected =
                 "class SomeClass {\r\n" +
                 "    void MyMethod2()\r\n" +
                 "    {\r\n" +
@@ -179,7 +179,7 @@ namespace JoinCSharp.UnitTests
         [Fact]
         public void Preprocess_WithNegativeConditionals_Stripped()
         {
-            string input = 
+            string input =
                 "class SomeClass {\r\n" +
                 "#if !CONDITIONAL\r\n" +
                 "    void MyMethod1()\r\n" +
@@ -191,7 +191,7 @@ namespace JoinCSharp.UnitTests
                 "    }\r\n" +
                 "}";
 
-            string expected = 
+            string expected =
                 "class SomeClass {\r\n" +
                 "    void MyMethod1()\r\n" +
                 "    {\r\n" +
@@ -209,7 +209,7 @@ namespace JoinCSharp.UnitTests
         [Fact]
         public void Preprocess_WithNegativeConditionals_ConditionalSpecifed_NotStripped()
         {
-            string input = 
+            string input =
                 "class SomeClass {\r\n" +
                 "#if !CONDITIONAL\r\n" +
                 "    void MyMethod1()\r\n" +
@@ -221,7 +221,7 @@ namespace JoinCSharp.UnitTests
                 "    }\r\n" +
                 "}";
 
-            string expected = 
+            string expected =
                 "class SomeClass {\r\n" +
                 "    void MyMethod2()\r\n" +
                 "    {\r\n" +
@@ -237,7 +237,7 @@ namespace JoinCSharp.UnitTests
         [Fact]
         public void Preprocess_WithConditionals_DirectiveSpecified_Retained()
         {
-            string input = 
+            string input =
                 "class SomeClass {\r\n" +
                 "#if CONDITIONAL\r\n" +
                 "    void MyMethod1()\r\n" +
@@ -249,7 +249,7 @@ namespace JoinCSharp.UnitTests
                 "    }\r\n" +
                 "}";
 
-            string expected = 
+            string expected =
                 "class SomeClass {\r\n" +
                 "    void MyMethod1()\r\n" +
                 "    {\r\n" +
@@ -295,7 +295,7 @@ namespace JoinCSharp.UnitTests
         public void Preprocess_IfInvalid()
         {
             var input = "#ifFOO";
-            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess(_helper));
+            Assert.Throws<PreprocessorException>(() => input.Preprocess(_helper));
         }
 
 
@@ -316,7 +316,7 @@ namespace JoinCSharp.UnitTests
                "#if FOO\r\n" +
                "#elifBAR";
 
-            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess(_helper));
+            Assert.Throws<PreprocessorException>(() => input.Preprocess(_helper));
         }
         [Fact]
         public void Preprocess_IfElse_2()
@@ -329,6 +329,14 @@ namespace JoinCSharp.UnitTests
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
+        [Fact]
+        public void Preprocess_IfElseInvalid()
+        {
+            var input =
+                "#if DEBUG\r\n#elseRELEASE\r\n#endif";
+
+            Assert.Throws<PreprocessorException>(() => input.Preprocess(_helper, "DEBUG"));
+        }
 
         [Theory]
         [InlineData(
@@ -338,7 +346,7 @@ namespace JoinCSharp.UnitTests
             )]
         [InlineData(
             "#if FOO\r\nFOO\r\n#if BAR\r\nBAR\r\n#else\r\nBAS\r\n#endif\r\nBAT\r\n#endif\r\n",
-            "FOO\r\nBAR\r\nBAT", 
+            "FOO\r\nBAR\r\nBAT",
             "FOO", "BAR"
             )]
         [InlineData(
@@ -386,5 +394,64 @@ namespace JoinCSharp.UnitTests
             var result = input.Preprocess(_helper, directives);
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
+
+        [Theory]
+        [InlineData("#if A")]
+        [InlineData("#else")]
+        [InlineData("#endif")]
+        [InlineData("#elif B")]
+        [InlineData("#warning w")]
+        [InlineData("#line 0")]
+        [InlineData("#region")]
+        [InlineData("#endregion")]
+        [InlineData("#define X")]
+        [InlineData("#undef X")]
+        public void ValidPreprocessorDirective(string input)
+        {
+            input.Preprocess(_helper);
+        }
+        [Theory]
+        [InlineData("#error some message", "some message")]
+        [InlineData("#error", "")]
+        public void Error_Throws(string input, string expected)
+        {
+            var e = Assert.Throws<PreprocessorException>(() => input.Preprocess(_helper));
+            Assert.Equal(expected, e.Message);
+        }
+
+        [Fact]
+        public void Define_NotAtStart_Throws()
+        {
+            var input = "BLA\r\n#define FOO";
+            Assert.Throws<PreprocessorException>(() => input.Preprocess(_helper));
+        }
+
+        [Fact]
+        public void Define_AtStart_DoesNotThrow()
+        {
+            var input = "\r\n#define FOO\r\n#if FOO\r\nFOO\r\n#endif";
+            var result = input.Preprocess(_helper);
+            Assert.Equal("\r\nFOO", result);
+        }
+
+        [Theory]
+        [InlineData("BLA\r\n#undef FOO")]
+        [InlineData("#if FOO\r\n#undef FOO")]
+        [InlineData("#if FOO\r\n#elif BAR\r\n#undef FOO")]
+        [InlineData("#if FOO\r\n#else\r\n#undef FOO")]
+        [InlineData("#if FOO\r\n#elif BAR\r\n#else BAT\r\n#endif\r\n#undef FOO")]
+        public void UnDefine_NotAtStart_Throws(string input)
+        {
+            Assert.Throws<PreprocessorException>(() => input.Preprocess(_helper));
+        }
+
+        [Fact]
+        public void UnDefine_AtStart_DoesNotThrow()
+        {
+            var input = "\r\n#undef FOO\r\n#if FOO\r\nFOO\r\n#endif";
+            var result = input.Preprocess(_helper, "FOO");
+            Assert.Equal("", result);
+        }
+
     }
 }

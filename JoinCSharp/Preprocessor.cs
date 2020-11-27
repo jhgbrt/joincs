@@ -29,7 +29,8 @@ namespace JoinCSharp
                 foreach (var line in _lines) yield return line;
                 _lines.Clear();
             }
-
+            internal State AddDirective(string directive) => this with { Directives = Directives.Concat(new[] { directive }).ToArray() };
+            internal State RemoveDirective(string directive) => this with { Directives = Directives.Except(new[] { directive }).ToArray() };
             private Stack<State> _stack = new();
             private readonly List<string> _lines = new();
 
@@ -42,7 +43,7 @@ namespace JoinCSharp
 
         internal static IEnumerable<string> Preprocess(this IEnumerable<string> input, Action<string> log, params string[] directives)
         {
-            var state = new State(OutsideIfDirective, directives, false);
+            var state = new State(BeginningOfFile, directives, false);
             foreach (string line in input)
             {
                 log?.Invoke(state.ToString());
@@ -55,22 +56,36 @@ namespace JoinCSharp
             }
         }
 
+        private static State BeginningOfFile(State state, string line) => GetDirective(line) switch
+        {
+            If { IsValid: false } => throw new PreprocessorException(),
+            If ifd when ifd.CodeShouldBeIncluded(state.Directives) => (state with { Next = OutsideIfDirective }).Push() with { Next = KeepingCode },
+            If ifd => (state with { Next = OutsideIfDirective }).Push() with { Next = SkippingCode },
+            Error e => throw new PreprocessorException(e.Message),
+            Define d => state.AddDirective(d.Symbol),
+            Undefine d => state.RemoveDirective(d.Symbol),
+            _ when string.IsNullOrWhiteSpace(line) => state.Yield(line),
+            _ => state.Yield(line) with { Next = OutsideIfDirective }
+        };
         private static State OutsideIfDirective(State state, string line) => GetDirective(line) switch
         {
-            If { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
+            If { IsValid: false } => throw new PreprocessorException(),
             If ifd when ifd.CodeShouldBeIncluded(state.Directives) => state.Push() with { Next = KeepingCode },
             If ifd => state.Push() with { Next = SkippingCode },
+            Error e => throw new PreprocessorException(e.Message),
+            Define or Undefine => throw new PreprocessorException("CS1032: Cannot define/undefine preprocessor symbols after first token in file"),
             _ => state.Yield(line)
         };
 
         private static State KeepingCode(State state, string line) => GetDirective(line) switch
         {
-            If { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
+            If { IsValid: false } => throw new PreprocessorException(),
             If ifd when ifd.CodeShouldBeIncluded(state.Directives) => state.Push(),
             If ifd => state.Push() with { Next = SkippingCode },
             EndIf => state.Reset(),
             Else => state with { Next = SkippingCode,  },
             ElIf => state with { Next = SkippingCode, Done = true },
+            Define or Undefine => throw new PreprocessorException("CS1032: Cannot define/undefine preprocessor symbols after first token in file"),
             _ => state.Yield(line)
         };
 
@@ -78,33 +93,43 @@ namespace JoinCSharp
         {
             { Done: true } => GetDirective(line) switch
             {
-                If { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
+                If { IsValid: false } => throw new PreprocessorException(),
                 If ifd => state.Push(),
                 EndIf => state.Reset(),
+                Define or Undefine => throw new PreprocessorException("CS1032: Cannot define/undefine preprocessor symbols after first token in file"),
                 _ => state
             },
             { Done: false } => GetDirective(line) switch
             {
-                If { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
+                If { IsValid: false } => throw new PreprocessorException(),
                 If ifd => state.Push(),
                 EndIf => state.Reset(),
                 Else ifd when state.Peek().Next == SkippingCode => state.Peek(),
                 ElIf ifd when ifd.CodeShouldBeIncluded(state.Directives) => state with { Next = KeepingCode },
                 ElIf => state with { Next = SkippingCode },
                 Else => state with { Next = KeepingCode },
+                Error e => throw new PreprocessorException(e.Message),
+                Define or Undefine => throw new PreprocessorException("CS1032: Cannot define/undefine preprocessor symbols after first token in file"),
                 _ => state
             }
         };
 
-        private static object? GetDirective(string line) => line.AsSpan().TrimStart("") switch
+        private static object? GetDirective(string line) => line.AsSpan().Trim("") switch
         {
             Span { Length: 0 } => default,
             Span s when s[0] != '#' => default,
             Span s when s.StartsWith("#if ") => If.From(s[3..]),
             Span s when s.StartsWith("#elif ") => ElIf.From(s[5..]),
-            Span s when s.StartsWith("#else") => Else.Instance,
+            Span s when s.StartsWith("#else") && s.Length == 5 => Else.Instance,
             Span s when s.StartsWith("#endif") => EndIf.Instance,
-            _ => throw new InvalidPreprocessorDirectiveException("CS1024 - Invalid preprocessor directive: {}")
+            Span s when s.StartsWith("#error") => Error.From(s.Length >= 7 ? s[7..] : string.Empty),
+            Span s when s.StartsWith("#warning") => default,
+            Span s when s.StartsWith("#line") => default,
+            Span s when s.StartsWith("#region") => default,
+            Span s when s.StartsWith("#endregion") => default,
+            Span s when s.StartsWith("#define ") => Define.From(s[8..]),
+            Span s when s.StartsWith("#undef ") => Undefine.From(s[7..]),
+            _ => throw new PreprocessorException("CS1024 - Invalid preprocessor directive: {}")
         };
 
         record If(bool Not, string Symbol)
@@ -139,6 +164,21 @@ namespace JoinCSharp
         {
             public static Else Instance = new();
         }
+
+        record Error(string Message)
+        {
+            public static Error From(Span message) => new Error(message.ToString());
+        }
+
+        record Define(string Symbol)
+        {
+            public static Define From(Span symbol) => new Define(symbol.ToString());
+        }
+        record Undefine(string Symbol)
+        {
+            public static Undefine From(Span symbol) => new Undefine(symbol.ToString());
+        }
+
         private static (bool not, string symbol) Parse(Span span)
         {
             var index = span.IndexOf('!');
@@ -149,10 +189,10 @@ namespace JoinCSharp
         }
     }
 
-    internal class InvalidPreprocessorDirectiveException: Exception
+    internal class PreprocessorException: Exception
     {
-        public InvalidPreprocessorDirectiveException() {}
-        public InvalidPreprocessorDirectiveException(string? message) : base(message) {}
-        public InvalidPreprocessorDirectiveException(string? message, Exception? innerException) : base(message, innerException) {}
+        public PreprocessorException() {}
+        public PreprocessorException(string? message) : base(message) {}
+        public PreprocessorException(string? message, Exception? innerException) : base(message, innerException) {}
     }
 }

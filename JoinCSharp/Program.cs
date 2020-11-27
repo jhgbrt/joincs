@@ -59,7 +59,7 @@ static class Program
                 await Console.Out.WriteAsync(result);
             }
         }
-        catch (InvalidPreprocessorDirectiveException e)
+        catch (PreprocessorException e)
         {
             Console.WriteLine(e.Message);
         }
