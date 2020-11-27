@@ -23,7 +23,7 @@ namespace JoinCSharp.UnitTests
             _output.WriteLine("INPUT: ");
             _output.WriteLine("=======");
             _output.WriteLine(input);
-            var result = new SourceAggregator(true).AddSource(input.Preprocess(preprocessorSymbols)).GetResult();
+            var result = new SourceAggregator(true).AddSource(input.Preprocess(_output, preprocessorSymbols)).GetResult();
             _output.WriteLine("RESULT: ");
             _output.WriteLine("=======");
             _output.WriteLine(result);

@@ -8,11 +8,18 @@ namespace JoinCSharp
     internal static class Preprocessor
     {
         internal static IEnumerable<string> Preprocess(this IEnumerable<IEnumerable<string>> input, params string[] directives)
-            => input.Select(x => string.Join(Environment.NewLine, x.Preprocess(directives)));
+            => input.Select(x => string.Join(Environment.NewLine, x.Preprocess(_ => {}, directives)));
 
         record State(Func<State, string, State> Next, string[] Directives, bool Done)
         {
-            internal State Reset() => this with { Next = OutsideIfDirective, Done = false };
+            private Stack<State> _stack = new();
+            internal State Push()
+            {
+                _stack.Push(this);
+                return this;
+            }
+            internal State Reset() => _stack.Pop() with { Done = false };
+            internal Func<State, string, State> Peek() => _stack.Peek().Next;
             internal State Yield(string line)
             {
                 _lines.Add(line);
@@ -24,14 +31,23 @@ namespace JoinCSharp
                 _lines.Clear();
             }
             private readonly List<string> _lines = new();
+
+            public override string ToString()
+            {
+                return $"Method = {Next.Method.Name}, Stack = {string.Join(",", _stack.Select(f => f.Next.Method.Name))}, Lines = {string.Join("\\r\\n", _lines)}";
+            }
         }
 
-        internal static IEnumerable<string> Preprocess(this IEnumerable<string> input, params string[] directives)
+        internal static IEnumerable<string> Preprocess(this IEnumerable<string> input, Action<string> log, params string[] directives)
         {
             var state = new State(OutsideIfDirective, directives, false);
             foreach (string line in input)
             {
+                log?.Invoke(state.ToString());
+                log?.Invoke(line);
                 state = state.Next(state, line);
+                log?.Invoke($"-> {state}");
+                log?.Invoke("");
                 foreach (var l in state.GetLines())
                     yield return l;
             }
@@ -40,14 +56,17 @@ namespace JoinCSharp
         static State OutsideIfDirective(State state, string line) => GetDirective(line) switch
         {
             IfDirective { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
-            IfDirective ifd when ifd.CodeShouldBeIncluded(state.Directives) => state with { Next = KeepingCode },
-            IfDirective => state with { Next = SkippingCode },
+            IfDirective ifd when ifd.CodeShouldBeIncluded(state.Directives) => state.Push() with { Next = KeepingCode },
+            IfDirective ifd => state.Push() with { Next = SkippingCode },
             _ => state.Yield(line)
         };
         static State KeepingCode(State state, string line) => GetDirective(line) switch
         {
+            IfDirective { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
+            IfDirective ifd when ifd.CodeShouldBeIncluded(state.Directives) => state.Push() with { Next = KeepingCode },
+            IfDirective ifd => state.Push() with { Next = SkippingCode },
             EndIfDirective => state.Reset(),
-            ElseDirective => state with { Next = SkippingCode, Done = true },
+            ElseDirective => state with { Next = SkippingCode,  },
             ElseIfDirective => state with { Next = SkippingCode, Done = true },
             _ => state.Yield(line)
         };
@@ -55,12 +74,17 @@ namespace JoinCSharp
         {
             { Done: true } => GetDirective(line) switch
             {
+                IfDirective { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
+                IfDirective ifd => state.Push() with { Next = SkippingCode },
                 EndIfDirective => state.Reset(),
                 _ => state
             },
             { Done: false } => GetDirective(line) switch
             {
+                IfDirective { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
+                IfDirective ifd => state.Push() with { Next = SkippingCode },
                 EndIfDirective => state.Reset(),
+                ElseDirective ifd when state.Peek() == SkippingCode => state,
                 ElseIfDirective ifd when ifd.CodeShouldBeIncluded(state.Directives) => state with { Next = KeepingCode },
                 ElseIfDirective => state with { Next = SkippingCode },
                 ElseDirective => state with { Next = KeepingCode },

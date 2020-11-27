@@ -174,14 +174,20 @@ namespace JoinCSharp.UnitTests
 
         static Lazy<string> winmerge = new Lazy<string>(() => new[]
             {
-                @"c:\Program Files\WinMerge\WinMergeU.exe",
-                @"c:\Program Files (x 86)\WinMerge\WinMergeU.exe",
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "WinMerge", "WinMergeU.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "WinMerge", "WinMergeU.exe"),
                 "WinMergeU.exe"
             }.FirstOrDefault(File.Exists));
 
         private void ShowInteractiveDiffIfDifferent(string result, string expected)
         {
+            if (!OperatingSystem.IsWindows())
+                return;
+
             if (!Environment.MachineName.StartsWith("DESKTOP"))
+                return;
+
+            if (winmerge.Value is null)
                 return;
 
             if (!string.IsNullOrEmpty(winmerge.Value) && result != expected)

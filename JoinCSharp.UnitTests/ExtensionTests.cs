@@ -2,19 +2,41 @@
 using System.Linq;
 using System.Text;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JoinCSharp.UnitTests
 {
 
     static class Ex
     {
-        public static string Preprocess(this string s, params string[] directives)
+        public static string Preprocess(this string s, ITestOutputHelper helper,params string[] directives)
         {
-            return string.Join(Environment.NewLine, s.ReadLines().Preprocess(directives));
+            helper.WriteLine("+=========+");
+            helper.WriteLine("| INPUT:  |");
+            helper.WriteLine("+=========+");
+            helper.WriteLine(s);
+            helper.WriteLine("");
+            helper.WriteLine("directives: " + string.Join(",", directives));
+            helper.WriteLine("");
+
+            var result = string.Join(Environment.NewLine, s.ReadLines().Preprocess(helper.WriteLine, directives));
+
+            helper.WriteLine("+=========+");
+            helper.WriteLine("| RESULT: |");
+            helper.WriteLine("+=========+");
+            helper.WriteLine(result);
+            return result;
         }
     }
     public class ExtensionTests
     {
+
+        ITestOutputHelper _helper;
+        public ExtensionTests(ITestOutputHelper helper)
+        {
+            _helper = helper;
+        }
+
         [Fact]
         public void IsBelow_FileInFolder_True()
         {
@@ -77,7 +99,7 @@ namespace JoinCSharp.UnitTests
         {
             string expected = string.Empty;
             string input = string.Empty;
-            string result = input.Preprocess();
+            string result = input.Preprocess(_helper);
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
@@ -88,7 +110,7 @@ namespace JoinCSharp.UnitTests
                 "#if FOO" + Environment.NewLine +
                 "FOO" + Environment.NewLine +
                 "#endif";
-            string result = input.Preprocess();
+            string result = input.Preprocess(_helper);
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
@@ -99,7 +121,7 @@ namespace JoinCSharp.UnitTests
                 "   #if   FOO\t " + Environment.NewLine +
                 "FOO" + Environment.NewLine +
                 "\t #endif";
-            string result = input.Preprocess();
+            string result = input.Preprocess(_helper);
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
@@ -110,7 +132,7 @@ namespace JoinCSharp.UnitTests
                 "   #if   !WHATEVER\t " + Environment.NewLine +
                 "FOO" + Environment.NewLine +
                 "\t #endif";
-            string result = input.Preprocess();
+            string result = input.Preprocess(_helper);
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
@@ -123,7 +145,7 @@ namespace JoinCSharp.UnitTests
                 "#else\t" + Environment.NewLine +
                 "BAR" + Environment.NewLine +
                 "#endif ";
-            string result = input.Preprocess();
+            string result = input.Preprocess(_helper);
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
@@ -136,7 +158,7 @@ namespace JoinCSharp.UnitTests
                 "#else" + Environment.NewLine +
                 "BAR" + Environment.NewLine +
                 "#endif\t";
-            string result = input.Preprocess();
+            string result = input.Preprocess(_helper);
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
@@ -147,26 +169,26 @@ namespace JoinCSharp.UnitTests
                 "#if !BAR\t " + Environment.NewLine +
                 "FOO" + Environment.NewLine +
                 "\t #endif";
-            string result = input.Preprocess();
+            string result = input.Preprocess(_helper);
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void Preprocess_InvalidDirective_NotTouched()
         {
             string input = "#if" + Environment.NewLine;
-            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess());
+            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess(_helper));
         }
         [Fact]
         public void Preprocess_InvalidNegativeDirective_NotTouched()
         {
             string input = "#if !" + Environment.NewLine;
-            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess());
+            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess(_helper));
         }
         [Fact]
         public void Preprocess_InvalidNegativeDirective2_NotTouched()
         {
             string input = "#if!" + Environment.NewLine;
-            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess());
+            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess(_helper));
         }
 
         [Fact]
@@ -182,7 +204,7 @@ namespace JoinCSharp.UnitTests
                 "    }" + Environment.NewLine + "" +
                 "}";
 
-            var result = input.Preprocess();
+            var result = input.Preprocess(_helper);
             var expected = input;
 
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
@@ -209,7 +231,7 @@ namespace JoinCSharp.UnitTests
                 "    }" + Environment.NewLine + "" +
                 "}";
 
-            var result = input.Preprocess();
+            var result = input.Preprocess(_helper);
 
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
@@ -238,7 +260,7 @@ namespace JoinCSharp.UnitTests
                 "    }" + Environment.NewLine + "" +
                 "}";
 
-            var result = input.Preprocess();
+            var result = input.Preprocess(_helper);
 
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
@@ -265,7 +287,7 @@ namespace JoinCSharp.UnitTests
                 "    }" + Environment.NewLine + "" +
                 "}";
 
-            var result = input.Preprocess("CONDITIONAL");
+            var result = input.Preprocess(_helper, "CONDITIONAL");
 
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
@@ -296,7 +318,7 @@ namespace JoinCSharp.UnitTests
                 "    }" + Environment.NewLine + "" +
                 "}";
 
-            var result = input.Preprocess("CONDITIONAL");
+            var result = input.Preprocess(_helper, "CONDITIONAL");
 
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
@@ -313,7 +335,7 @@ namespace JoinCSharp.UnitTests
                 "BAZ" + Environment.NewLine + "" +
                 "#endif";
 
-            var result = input.Preprocess("FOO");
+            var result = input.Preprocess(_helper, "FOO");
             var expected = "FOO";
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
@@ -341,7 +363,7 @@ namespace JoinCSharp.UnitTests
                 "#endif";
             ;
 
-            var result = input.Preprocess("FOO");
+            var result = input.Preprocess(_helper, "FOO");
             var expected = "FOO\r\n\r\nHELLO\r\n\r\nFOO";
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
@@ -350,7 +372,7 @@ namespace JoinCSharp.UnitTests
         public void Preprocess_IfInvalid()
         {
             var input = "#ifFOO";
-            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess());
+            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess(_helper));
         }
 
 
@@ -366,7 +388,7 @@ namespace JoinCSharp.UnitTests
                "BAZ" + Environment.NewLine + "" +
                "#endif";
 
-            var result = input.Preprocess("BAR");
+            var result = input.Preprocess(_helper, "BAR");
             var expected = "BAR";
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
@@ -377,7 +399,7 @@ namespace JoinCSharp.UnitTests
                "#if FOO" + Environment.NewLine + "" +
                "#elifBAR";
 
-            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess());
+            Assert.Throws<InvalidPreprocessorDirectiveException>(() => input.Preprocess(_helper));
         }
         [Fact]
         public void Preprocess_IfElse_2()
@@ -389,27 +411,66 @@ namespace JoinCSharp.UnitTests
                 "RELEASE" + Environment.NewLine + "" +
                 "#endif";
 
-            var result = input.Preprocess("DEBUG");
+            var result = input.Preprocess(_helper, "DEBUG");
             var expected = "DEBUG";
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
-        //[Fact]
-        //public void Preprocess_NestedIfs()
-        //{
-        //    var input =
-        //        "#if FOO\r\n" +
-        //        "FOO\r\n" +
-        //        "#if BAR\r\n" +
-        //        "BAR\r\n" +
-        //        "#else\r\n" +
-        //        "BAS\r\n" +
-        //        "#endif\r\n" +
-        //        "BAT\r\n" +
-        //        "#endif\r\n";
-        //    var result = input.Preprocess("FOO");
-        //    var expected = "FOO";
-        //    Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
-        //}
+        [Theory]
+        [InlineData(
+            "#if FOO\r\nFOO\r\n#if BAR\r\nBAR\r\n#else\r\nBAS\r\n#endif\r\nBAT\r\n#endif\r\n",
+            "FOO\r\nBAS\r\nBAT",
+            "FOO"
+            )]
+        [InlineData(
+            "#if FOO\r\nFOO\r\n#if BAR\r\nBAR\r\n#else\r\nBAS\r\n#endif\r\nBAT\r\n#endif\r\n",
+            "FOO\r\nBAR\r\nBAT", 
+            "FOO", "BAR"
+            )]
+        [InlineData(
+            "#if FOO\r\nFOO\r\n#if BAR\r\nBAR\r\n#else\r\nBAS\r\n#endif\r\nBAT\r\n#endif\r\n",
+            "",
+            "BAR"
+            )]
+        [InlineData(
+            "#if FOO\r\nFOO\r\n#if BAR\r\nBAR\r\n#else\r\nBAS\r\n#endif\r\nBAT\r\n#endif\r\n",
+            "",
+            "BAQ"
+            )]
+        [InlineData(
+            "#if FOO\r\nFOO\r\n#if BAR\r\nBAR\r\n#elif BAS\r\nBAS\r\n#else\r\nBAF\r\n#endif\r\nBAT\r\n#endif\r\n",
+            "FOO\r\nBAF\r\nBAT",
+            "FOO"
+            )]
+        [InlineData(
+            "#if FOO\r\nFOO\r\n#if BAR\r\nBAR\r\n#if BAS\r\nBAS\r\n#endif\r\n#endif\r\nBAT\r\n#endif\r\n",
+            "FOO\r\nBAR\r\nBAS\r\nBAT",
+            "FOO", "BAR", "BAS"
+            )]
+        [InlineData(
+            "#if FOO\r\nFOO\r\n#if BAR\r\nBAR\r\n#if BAS\r\nBAS\r\n#endif\r\n#endif\r\nBAT\r\n#endif\r\n",
+            "FOO\r\nBAR\r\nBAT",
+            "FOO", "BAR"
+            )]
+        [InlineData(
+            "#if FOO\r\nFOO\r\n#elif BAR\r\nBAR\r\n#if BAS\r\nBAS\r\n#endif\r\nBAT\r\n#endif\r\n",
+            "BAR\r\nBAS\r\nBAT",
+            "BAR", "BAS"
+            )]
+        [InlineData(
+            "#if FOO\r\nFOO\r\n#elif BAR\r\nBAR\r\n#if BAS\r\nBAS\r\n#endif\r\nBAT\r\n#endif\r\n",
+            "BAR\r\nBAT",
+            "BAR"
+            )]
+        [InlineData(
+            "#if FOO\r\nFOO\r\n#if BAR\r\nBAR\r\n#else\r\nBAS\r\n#endif\r\n#elif BAQ\r\n#else\r\nBAT\r\n#endif\r\n",
+            "FOO\r\nBAS",
+            "FOO"
+            )]
+        public void Preprocess_NestedIfs(string input, string expected, params string[] directives)
+        {
+            var result = input.Preprocess(_helper, directives);
+            Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
+        }
     }
 }
