@@ -106,7 +106,6 @@ namespace JoinCSharp.UnitTests
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
-
         [Fact]
         public void JoinTest_WithPreprocessorDirective()
         {
@@ -172,14 +171,14 @@ namespace JoinCSharp.UnitTests
             Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
         }
 
-        static Lazy<string> winmerge = new Lazy<string>(() => new[]
+        static readonly Lazy<string> winmerge = new(() => new[]
             {
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "WinMerge", "WinMergeU.exe"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "WinMerge", "WinMergeU.exe"),
                 "WinMergeU.exe"
             }.FirstOrDefault(File.Exists));
 
-        private void ShowInteractiveDiffIfDifferent(string result, string expected)
+        private static void ShowInteractiveDiffIfDifferent(string result, string expected)
         {
             if (!OperatingSystem.IsWindows())
                 return;

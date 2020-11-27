@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis.CSharp.Formatting;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Options;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -13,8 +12,8 @@ namespace JoinCSharp
 
     static class MyFormatter
     {
-        static AdhocWorkspace workspace = new AdhocWorkspace();
-        static OptionSet options = workspace.Options
+        static readonly AdhocWorkspace workspace = new AdhocWorkspace();
+        static readonly OptionSet options = workspace.Options
             .WithChangedOption(CSharpFormattingOptions.WrappingPreserveSingleLine, false);
 
         public static SyntaxNode Format(this SyntaxNode node)

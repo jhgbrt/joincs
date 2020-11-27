@@ -26,8 +26,7 @@ namespace JoinCSharp
 
         public SourceAggregator AddSource(string source)
         {
-            var syntaxTree = CSharpSyntaxTree.ParseText(source);
-            var compilationUnit = (CompilationUnitSyntax)syntaxTree.GetRoot();
+            var compilationUnit = (CompilationUnitSyntax)CSharpSyntaxTree.ParseText(source).GetRoot();
             Usings.AddRange(compilationUnit.Usings);
             Namespaces.AddRange(compilationUnit.Members.OfType<NamespaceDeclarationSyntax>());
             Other.AddRange(compilationUnit.Members.Except(Namespaces));
