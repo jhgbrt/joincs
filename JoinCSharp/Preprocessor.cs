@@ -55,39 +55,39 @@ namespace JoinCSharp
 
         static State OutsideIfDirective(State state, string line) => GetDirective(line) switch
         {
-            IfDirective { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
-            IfDirective ifd when ifd.CodeShouldBeIncluded(state.Directives) => state.Push() with { Next = KeepingCode },
-            IfDirective ifd => state.Push() with { Next = SkippingCode },
+            If { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
+            If ifd when ifd.CodeShouldBeIncluded(state.Directives) => state.Push() with { Next = KeepingCode },
+            If ifd => state.Push() with { Next = SkippingCode },
             _ => state.Yield(line)
         };
         static State KeepingCode(State state, string line) => GetDirective(line) switch
         {
-            IfDirective { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
-            IfDirective ifd when ifd.CodeShouldBeIncluded(state.Directives) => state.Push() with { Next = KeepingCode },
-            IfDirective ifd => state.Push() with { Next = SkippingCode },
-            EndIfDirective => state.Reset(),
-            ElseDirective => state with { Next = SkippingCode,  },
-            ElseIfDirective => state with { Next = SkippingCode, Done = true },
+            If { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
+            If ifd when ifd.CodeShouldBeIncluded(state.Directives) => state.Push() with { Next = KeepingCode },
+            If ifd => state.Push() with { Next = SkippingCode },
+            EndIf => state.Reset(),
+            Else => state with { Next = SkippingCode,  },
+            ElIf => state with { Next = SkippingCode, Done = true },
             _ => state.Yield(line)
         };
         static State SkippingCode(State state, string line) => state switch
         {
             { Done: true } => GetDirective(line) switch
             {
-                IfDirective { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
-                IfDirective ifd => state.Push() with { Next = SkippingCode },
-                EndIfDirective => state.Reset(),
+                If { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
+                If ifd => state.Push() with { Next = SkippingCode },
+                EndIf => state.Reset(),
                 _ => state
             },
             { Done: false } => GetDirective(line) switch
             {
-                IfDirective { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
-                IfDirective ifd => state.Push() with { Next = SkippingCode },
-                EndIfDirective => state.Reset(),
-                ElseDirective ifd when state.Peek() == SkippingCode => state,
-                ElseIfDirective ifd when ifd.CodeShouldBeIncluded(state.Directives) => state with { Next = KeepingCode },
-                ElseIfDirective => state with { Next = SkippingCode },
-                ElseDirective => state with { Next = KeepingCode },
+                If { IsValid: false } => throw new InvalidPreprocessorDirectiveException(),
+                If ifd => state.Push() with { Next = SkippingCode },
+                EndIf => state.Reset(),
+                Else ifd when state.Peek() == SkippingCode => state,
+                ElIf ifd when ifd.CodeShouldBeIncluded(state.Directives) => state with { Next = KeepingCode },
+                ElIf => state with { Next = SkippingCode },
+                Else => state with { Next = KeepingCode },
                 _ => state
             }
         };
@@ -95,41 +95,41 @@ namespace JoinCSharp
         {
             Span { Length: 0 } => default,
             Span s when s[0] != '#' => default,
-            Span s when s.StartsWith("#if ") => IfDirective.From(s[3..]),
-            Span s when s.StartsWith("#elif ") => ElseIfDirective.From(s[5..]),
-            Span s when s.StartsWith("#else") => ElseDirective.Instance,
-            Span s when s.StartsWith("#endif") => EndIfDirective.Instance,
+            Span s when s.StartsWith("#if ") => If.From(s[3..]),
+            Span s when s.StartsWith("#elif ") => ElIf.From(s[5..]),
+            Span s when s.StartsWith("#else") => Else.Instance,
+            Span s when s.StartsWith("#endif") => EndIf.Instance,
             _ => throw new InvalidPreprocessorDirectiveException("CS1024 - Invalid preprocessor directive: {}")
         };
 
-        record IfDirective(bool Not, string Symbol)
+        record If(bool Not, string Symbol)
         {
-            public static IfDirective From(Span span)
+            public static If From(Span span)
             {
                 var (not, symbol) = Parse(span);
-                return new IfDirective(not, symbol);
+                return new If(not, symbol);
             }
             public bool IsValid => !Not || Not && !string.IsNullOrEmpty(Symbol);
             public bool CodeShouldBeIncluded(string[] directives) => directives.Any(directive => Symbol == directive) ? !Not : Not;
         }
-        record ElseIfDirective(bool Not, string Symbol)
+        record ElIf(bool Not, string Symbol)
         {
-            public static ElseIfDirective From(Span span)
+            public static ElIf From(Span span)
             {
                 var (not, symbol) = Parse(span);
-                return new ElseIfDirective(not, symbol);
+                return new ElIf(not, symbol);
             }
 
             public bool IsValid => !Not || Not && !string.IsNullOrEmpty(Symbol);
             public bool CodeShouldBeIncluded(string[] directives) => directives.Any(directive => Symbol == directive) ? !Not : Not;
         }
-        record EndIfDirective
+        record EndIf
         {
-            public static EndIfDirective Instance = new EndIfDirective();
+            public static EndIf Instance = new();
         }
-        record ElseDirective
+        record Else
         {
-            public static ElseDirective Instance = new ElseDirective();
+            public static Else Instance = new();
         }
         static (bool not, string symbol) Parse(Span span)
         {
@@ -144,7 +144,7 @@ namespace JoinCSharp
         }
     }
 
-    public class InvalidPreprocessorDirectiveException: Exception
+    internal class InvalidPreprocessorDirectiveException: Exception
     {
         public InvalidPreprocessorDirectiveException() : base()
         {
