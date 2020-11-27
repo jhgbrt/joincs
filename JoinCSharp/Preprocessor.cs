@@ -17,7 +17,7 @@ namespace JoinCSharp
                 _stack.Push(this);
                 return this with { NonBlankLinesYielded = NonBlankLinesYielded + 1 };
             }
-            internal State Reset() => _stack.Pop() with { Done = false, NonBlankLinesYielded = this.NonBlankLinesYielded };
+            internal State Reset() => _stack.Pop() with { Done = false, NonBlankLinesYielded = NonBlankLinesYielded };
             internal State Peek() => _stack.Peek();
             internal State Yield(string line)
             {
@@ -91,7 +91,7 @@ namespace JoinCSharp
 
         private static State KeepingCode(State state, string line, int lineNumber) => state.GetDirective(line) switch
         {
-            If { IsValid: false } => throw new PreprocessorException(),
+            If { IsValid: false } => throw new PreprocessorException("CS1517: invalid preprocessor expression"),
             If ifd when ifd.CodeShouldBeIncluded(state.Directives) => state.Push(),
             If ifd => state.Push() with { Next = SkippingCode },
             EndIf => state.Reset(),
