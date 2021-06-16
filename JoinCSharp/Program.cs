@@ -1,8 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using JoinCSharp;
 
 [assembly: InternalsVisibleTo("JoinCSharp.UnitTests")]

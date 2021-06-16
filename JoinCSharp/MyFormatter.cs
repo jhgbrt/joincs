@@ -5,7 +5,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Options;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace JoinCSharp
 {
