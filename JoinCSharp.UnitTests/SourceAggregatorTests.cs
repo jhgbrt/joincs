@@ -610,6 +610,6 @@ public class SourceAggregatorTests
 
         var result = Process(input);
 
-        Assert.Equal(expected, result);
+        Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
 }
