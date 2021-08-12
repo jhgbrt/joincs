@@ -52,6 +52,7 @@ internal static class Preprocessor
             Span s when s.StartsWith("#endregion") => default,
             Span s when s.StartsWith("#define ") => new Define(s[8..].ToString()),
             Span s when s.StartsWith("#undef ") => new Undefine(s[7..].ToString()),
+            Span s when s.StartsWith("#pragma ") => new Pragma(s[8..].ToString()),
             _ => throw new PreprocessorException("CS1024 - Invalid preprocessor directive")
         };
     }
@@ -150,6 +151,7 @@ internal static class Preprocessor
     record struct Error(string Message);
     record struct Define(string Symbol);
     record struct Undefine(string Symbol);
+    record struct Pragma(string Message);
 
     private static (bool not, string symbol) Parse(Span span)
     {
