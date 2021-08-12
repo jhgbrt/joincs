@@ -1,7 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using JoinCSharp;
-
-[assembly: InternalsVisibleTo("JoinCSharp.UnitTests")]
+﻿namespace JoinCSharp;
 
 static class Program
 {
