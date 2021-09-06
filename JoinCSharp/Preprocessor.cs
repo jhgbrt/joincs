@@ -37,7 +37,7 @@ internal static class Preprocessor
             $"Lines = {string.Join("\\r\\n", _lines)}, " +
             $"NonBlankLines = {NonBlankLinesYielded}";
 
-        internal object? GetDirective(string line) => line.AsSpan().Trim("") switch
+        internal Directive? GetDirective(string line) => line.AsSpan().Trim("") switch
         {
             Span { Length : 0 } => default,
             Span s when !s.StartsWith("#") => default,
@@ -53,7 +53,7 @@ internal static class Preprocessor
             Span s when s.StartsWith("#define ") => new Define(s[8..].ToString()),
             Span s when s.StartsWith("#undef ") => new Undefine(s[7..].ToString()),
             Span s when s.StartsWith("#pragma ") => new Pragma(s[8..].ToString()),
-            _ => throw new PreprocessorException("CS1024 - Invalid preprocessor directive")
+            _ => throw new PreprocessorException($"CS1024 - Invalid preprocessor directive: {line}")
         };
     }
 
@@ -122,8 +122,9 @@ internal static class Preprocessor
         }
     };
 
+    interface Directive { };
 
-    record struct If(bool Not, string Symbol)
+    record struct If(bool Not, string Symbol) : Directive
     {
         public static If From(Span span)
         {
@@ -134,7 +135,7 @@ internal static class Preprocessor
         public bool CodeShouldBeIncluded(string[] directives) => directives.Contains(Symbol) ? !Not : Not;
     }
 
-    record struct ElIf(bool Not, string Symbol)
+    record struct ElIf(bool Not, string Symbol) : Directive
     {
         public static ElIf From(Span span)
         {
@@ -146,12 +147,12 @@ internal static class Preprocessor
         public bool CodeShouldBeIncluded(string[] directives) => directives.Contains(Symbol) ? !Not : Not;
     }
 
-    record struct EndIf;
-    record struct Else;
-    record struct Error(string Message);
-    record struct Define(string Symbol);
-    record struct Undefine(string Symbol);
-    record struct Pragma(string Message);
+    record struct EndIf : Directive;
+    record struct Else : Directive;
+    record struct Error(string Message) : Directive;
+    record struct Define(string Symbol) : Directive;
+    record struct Undefine(string Symbol) : Directive;
+    record struct Pragma(string Message) : Directive;
 
     private static (bool not, string symbol) Parse(Span span)
     {
