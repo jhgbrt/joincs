@@ -398,6 +398,16 @@ public class SourceAggregatorTests
         const string expected = "using MyUsing1;\r\nusing MyUsing2;";
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
+    [Fact]
+    public void GlobalKeywordsAreRemovedFromUsings()
+    {
+        string input = "global using MyUsing;";
+
+        string result = Process(input);
+
+        const string expected = "using MyUsing;";
+        Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
+    }
 
     [Fact]
     public void ConditionalIsNotStrippedFromCode()

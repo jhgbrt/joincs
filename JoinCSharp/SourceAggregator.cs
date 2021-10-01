@@ -35,7 +35,7 @@ internal class SourceAggregator
     }
 
     public string GetResult() => SyntaxFactory.CompilationUnit()
-        .AddUsings(Usings.Select(u => u.WithGlobalKeyword(SyntaxFactory.Token(SyntaxKind.None))).Distinct(UsingComparer).OrderBy(u => u.GlobalKeyword.Text).ThenBy(u => u.Name.ToString()).ToArray())
+        .AddUsings(Usings.Select(u => u.WithGlobalKeyword(SyntaxFactory.Token(SyntaxKind.None))).Distinct(UsingComparer).OrderBy(u => u.Name.ToString()).ToArray())
         .AddAttributeLists(GetConsolidatedAttributeList().ToArray())
         .AddExterns(Externs.ToArray())
         .AddMembers(GetConsolidatedNamespaces().ToArray())
