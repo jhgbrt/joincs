@@ -45,12 +45,12 @@ internal class SourceAggregator
 
     private IEnumerable<MemberDeclarationSyntax> GetConsolidatedNamespaces()
         => from @namespace in Namespaces
-            let name = @namespace.Name.ToString()
-            orderby name
-            group @namespace by name into ns
-            select SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(ns.Key))
-                .AddUsings(ns.SelectMany(x => x.Usings).ToArray())
-                .AddMembers(ns.SelectMany(x => x.Members).ToArray());
+           let name = @namespace.Name.ToString()
+           orderby name
+           group @namespace by name into ns
+           select SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(ns.Key))
+               .AddUsings(ns.SelectMany(x => x.Usings).ToArray())
+               .AddMembers(ns.SelectMany(x => x.Members).ToArray());
 
     private IEnumerable<AttributeListSyntax> GetConsolidatedAttributeList()
     {

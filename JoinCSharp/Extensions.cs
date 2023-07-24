@@ -5,9 +5,6 @@ internal static class Extensions
     public static IEnumerable<FileInfo> Except(this IEnumerable<FileInfo> input, params DirectoryInfo[] folders)
         => input.Where(file => !folders.Any(file.SitsBelow));
 
-    public static DirectoryInfo SubFolder(this DirectoryInfo root, string sub)
-        => new(Path.Combine(root.FullName, sub));
-
     public static bool SitsBelow(this FileInfo file, DirectoryInfo folder)
         => file.Directory?.Parents().Any(dir => dir.FullName.Equals(folder.FullName)) ?? false;
 

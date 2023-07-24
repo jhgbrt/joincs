@@ -47,8 +47,11 @@ public class ExtensionTests
             PathBuilder.FromRoot().WithSubFolders("A", "AE").WithFileName("AAF.txt").FileInfo
         };
 
-        var rootDir = PathBuilder.FromRoot().WithSubFolders("A").DirectoryInfo;
-        var subdirs = new[] { "AB", "AD" }.Select(rootDir.SubFolder).ToArray();
+        var subdirs = new[]
+        {
+            PathBuilder.FromRoot().WithSubFolders("A", "AB").DirectoryInfo,
+            PathBuilder.FromRoot().WithSubFolders("A", "AD").DirectoryInfo
+        };
 
         var result = input.Except(subdirs).Select(f => f.FullName).OrderBy(a => a).ToArray();
 

@@ -30,8 +30,8 @@ static class Program
 
         preprocessorDirectives ??= Array.Empty<string>();
 
-        var binobj = new[] { "bin", "obj" }.Select(input.SubFolder)
-            .Select(d => d.FullName)
+        var binobj = new[] { "bin", "obj" }
+            .Select(s => Path.Combine(input.FullName, s))
             .ToArray();
 
         try
