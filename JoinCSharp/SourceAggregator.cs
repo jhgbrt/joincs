@@ -4,15 +4,12 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace JoinCSharp;
 
-internal class SourceAggregator
+internal class SourceAggregator(bool includeAssemblyAttributes)
 {
-    private readonly bool _includeAssemblyAttributes;
-    public SourceAggregator(bool includeAssemblyAttributes) => _includeAssemblyAttributes = includeAssemblyAttributes;
-
     class ByNameUsingComparer : IEqualityComparer<UsingDirectiveSyntax>
     {
-        public bool Equals(UsingDirectiveSyntax? x, UsingDirectiveSyntax? y) => Equals(x?.Name.ToString(), y?.Name.ToString());
-        public int GetHashCode(UsingDirectiveSyntax obj) => obj.Name.ToString().GetHashCode();
+        public bool Equals(UsingDirectiveSyntax? x, UsingDirectiveSyntax? y) => Equals(x?.Name?.ToString(), y?.Name?.ToString());
+        public int GetHashCode(UsingDirectiveSyntax? obj) => obj?.Name?.ToString()?.GetHashCode() ?? 0;
     }
     static readonly ByNameUsingComparer UsingComparer = new();
 
@@ -28,14 +25,15 @@ internal class SourceAggregator
         Usings.AddRange(compilationUnit.Usings);
         Namespaces.AddRange(compilationUnit.Members.OfType<NamespaceDeclarationSyntax>());
         Other.AddRange(compilationUnit.Members.Except(Namespaces));
-        if (_includeAssemblyAttributes)
-            AttributeLists.AddRange(compilationUnit.AttributeLists.Where(al => al.Target?.Identifier.Kind() == SyntaxKind.AssemblyKeyword));
+        if (includeAssemblyAttributes)
+            AttributeLists.AddRange(compilationUnit.AttributeLists
+            .Where(al => al.Target?.Identifier.Kind() == SyntaxKind.AssemblyKeyword));
         Externs.AddRange(compilationUnit.Externs);
         return this;
     }
 
     public string GetResult() => SyntaxFactory.CompilationUnit()
-        .AddUsings(Usings.Select(u => u.WithGlobalKeyword(SyntaxFactory.Token(SyntaxKind.None))).Distinct(UsingComparer).OrderBy(u => u.Name.ToString()).ToArray())
+        .AddUsings(Usings.Select(u => u.WithGlobalKeyword(SyntaxFactory.Token(SyntaxKind.None))).Distinct(UsingComparer).OrderBy(u => u?.Name.ToString()).ToArray())
         .AddAttributeLists(GetConsolidatedAttributeList().ToArray())
         .AddExterns(Externs.ToArray())
         .AddMembers(GetConsolidatedNamespaces().ToArray())

@@ -13,7 +13,7 @@ internal static class Preprocessor
             _stack.Push(this);
             return this with { NonBlankLinesYielded = NonBlankLinesYielded + 1 };
         }
-        internal State Reset() => _stack.Pop() with { Done = false, NonBlankLinesYielded = NonBlankLinesYielded };
+        internal State Pop() => _stack.Pop() with { Done = false, NonBlankLinesYielded = NonBlankLinesYielded };
         internal State Peek() => _stack.Peek();
         internal State Yield(string line)
         {
@@ -90,7 +90,7 @@ internal static class Preprocessor
         If { IsValid: false } => throw new PreprocessorException("CS1517: invalid preprocessor expression"),
         If ifd when ifd.CodeShouldBeIncluded(state.Directives) => state.Push(),
         If ifd => state.Push() with { Next = SkippingCode },
-        EndIf => state.Reset(),
+        EndIf => state.Pop(),
         Else => state with { Next = SkippingCode,  },
         ElIf => state with { Next = SkippingCode, Done = true },
         Define or Undefine => throw new PreprocessorException("CS1032: Cannot define/undefine preprocessor symbols after first token in file"),
@@ -103,7 +103,7 @@ internal static class Preprocessor
         {
             If { IsValid: false } => throw new PreprocessorException(),
             If => state.Push(),
-            EndIf => state.Reset(),
+            EndIf => state.Pop(),
             Define or Undefine => throw new PreprocessorException("CS1032: Cannot define/undefine preprocessor symbols after first token in file"),
             _ => state
         },
@@ -111,7 +111,7 @@ internal static class Preprocessor
         {
             If { IsValid: false } => throw new PreprocessorException(),
             If => state.Push(),
-            EndIf => state.Reset(),
+            EndIf => state.Pop(),
             Else ifd when state.Peek().Next == SkippingCode => state.Peek(),
             ElIf ifd when ifd.CodeShouldBeIncluded(state.Directives) => state with { Next = KeepingCode },
             ElIf => state with { Next = SkippingCode },

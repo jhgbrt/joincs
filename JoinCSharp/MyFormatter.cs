@@ -49,7 +49,7 @@ static class MyFormatter
             _ => Formatter.Format(node, workspace, options.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInObjectCollectionArrayInitializers, true))
         };
 
-        [return: NotNullIfNotNull("node")]
+        [return: NotNullIfNotNull(nameof(node))]
         public override SyntaxNode? Visit(SyntaxNode? node) => base.Visit(node);
     }
 

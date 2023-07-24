@@ -541,7 +541,7 @@ public class SourceAggregatorTests
             "{" + NewLine +
             "}";
 
-        var expected = "var p = new MyClass() {}";
+        var expected = "var p = new MyClass() { }";
 
         var result = Process(input);
 
