@@ -26,14 +26,17 @@ internal class SourceAggregator(bool includeAssemblyAttributes)
         Namespaces.AddRange(compilationUnit.Members.OfType<NamespaceDeclarationSyntax>());
         Other.AddRange(compilationUnit.Members.Except(Namespaces));
         if (includeAssemblyAttributes)
-            AttributeLists.AddRange(compilationUnit.AttributeLists
-            .Where(al => al.Target?.Identifier.Kind() == SyntaxKind.AssemblyKeyword));
+            AttributeLists.AddRange(compilationUnit.AttributeLists.Where(al => al.Target!.Identifier.IsKind(SyntaxKind.AssemblyKeyword)));
         Externs.AddRange(compilationUnit.Externs);
         return this;
     }
 
     public string GetResult() => SyntaxFactory.CompilationUnit()
-        .AddUsings(Usings.Select(u => u.WithGlobalKeyword(SyntaxFactory.Token(SyntaxKind.None))).Distinct(UsingComparer).OrderBy(u => u?.Name.ToString()).ToArray())
+        .AddUsings(Usings
+            .Select(u => u.WithGlobalKeyword(SyntaxFactory.Token(SyntaxKind.None)))
+            .Distinct(UsingComparer)
+            .OrderBy(u => u?.Name?.ToString())
+            .ToArray())
         .AddAttributeLists(GetConsolidatedAttributeList().ToArray())
         .AddExterns(Externs.ToArray())
         .AddMembers(GetConsolidatedNamespaces().ToArray())

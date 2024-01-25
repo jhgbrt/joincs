@@ -6,8 +6,8 @@ namespace JoinCSharp.UnitTests;
 
 public class IntegrationTest
 {
-    private static readonly string[] sources = new[]
-    {
+    private static readonly string[] sources =
+    [
             "using Some.Using1;" +
             "using Some.Using2;" + Environment.NewLine + "" +
             "#if CONDITIONAL" + Environment.NewLine + "" +
@@ -42,7 +42,7 @@ public class IntegrationTest
             "   class ConditionalClass{}" + Environment.NewLine + "" +
             "#endif" + Environment.NewLine + ""+
             "}"
-        };
+        ];
 
     [Fact]
     public void JoinTest_WithoutPreprocessorDirective()

@@ -1,7 +1,11 @@
-﻿using Xunit;
+﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.CSharp;
+
+using Xunit;
 using Xunit.Abstractions;
 
 using static System.Environment;
+using Microsoft.CodeAnalysis;
 
 namespace JoinCSharp.UnitTests;
 
@@ -32,12 +36,14 @@ public class SourceAggregatorTests
 
         var result = Process(input);
 
-        var expected = "enum MyEnum" + NewLine + "" +
-                        "{" + NewLine + "" +
-                        "    A," + NewLine + "" +
-                        "    B," + NewLine + "" +
-                        "    C" + NewLine + "" +
-                        "}";
+        var expected = """
+            enum MyEnum
+            {
+                A,
+                B,
+                C
+            }
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -61,10 +67,12 @@ public class SourceAggregatorTests
 
         var result = Process(input);
 
-        var expected = "class SomeClass" + NewLine + "" +
-            "{" + NewLine + "" +
-            "    private bool _b;" + NewLine + "" +
-            "}";
+        var expected = """
+            class SomeClass
+            {
+                private bool _b;
+            }
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -86,10 +94,12 @@ public class SourceAggregatorTests
 
         var result = Process(input);
 
-        var expected = "interface SomeClass" + NewLine + "" +
-            "{" + NewLine + "" +
-            "    private void M();" + NewLine + "" +
-            "}";
+        var expected = """
+            interface SomeClass
+            {
+                private void M();
+            }
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -101,10 +111,12 @@ public class SourceAggregatorTests
 
         var result = Process(input);
 
-        var expected = "class SomeClass" + NewLine + "" +
-            "{" + NewLine + "" +
-            "    private void M() { }" + NewLine + "" +
-            "}";
+        var expected = """
+            class SomeClass
+            {
+                private void M() { }
+            }
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -115,10 +127,12 @@ public class SourceAggregatorTests
 
         var result = Process(input);
 
-        var expected = "class SomeClass" + NewLine + "" +
-            "{" + NewLine + "" +
-            "    private int M() => 1;" + NewLine + "" +
-            "}";
+        var expected = """
+            class SomeClass
+            {
+                private int M() => 1;
+            }
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -130,10 +144,12 @@ public class SourceAggregatorTests
 
         var result = Process(input);
 
-        var expected = "class SomeClass" + NewLine + "" +
-            "{" + NewLine + "" +
-            "    private int M => 1;" + NewLine + "" +
-            "}";
+        var expected = """
+            class SomeClass
+            {
+                private int M => 1;
+            }
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -144,10 +160,12 @@ public class SourceAggregatorTests
 
         var result = Process(input);
 
-        var expected = "class SomeClass" + NewLine + "" +
-            "{" + NewLine + "" +
-            "    private int M { get; set; }" + NewLine + "" +
-            "}";
+        var expected = """
+            class SomeClass
+            {
+                private int M { get; set; }
+            }
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -158,10 +176,12 @@ public class SourceAggregatorTests
 
         var result = Process(input);
 
-        var expected = "class SomeClass" + NewLine + "" +
-            "{" + NewLine + "" +
-            "    private int M { get; }" + NewLine + "" +
-            "}";
+        var expected = """
+            class SomeClass
+            {
+                private int M { get; }
+            }
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -181,11 +201,18 @@ public class SourceAggregatorTests
     [Fact]
     public void AssemblyAttribute()
     {
-        var input = "using SomeNamespace;" + NewLine + "[assembly: SomeAttribute()]";
+        var input = """
+            using SomeNamespace;
+            [assembly: SomeAttribute()]
+            """;
 
         var result = Process(input);
 
-        var expected = "using SomeNamespace;" + NewLine + "" + NewLine + "[assembly: SomeAttribute()]";
+        var expected = """
+            using SomeNamespace;
+
+            [assembly: SomeAttribute()]
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -193,30 +220,62 @@ public class SourceAggregatorTests
     [Fact]
     public void AssemblyAttributeList()
     {
-        var input = "using SomeNamespace;" + NewLine + "[assembly: SomeAttribute(), MyAttribute()]";
+        var input = """
+            using SomeNamespace;
+            [assembly: SomeAttribute(), MyAttribute()]
+            """;
 
         var result = Process(input);
 
-        var expected = "using SomeNamespace;" + NewLine + "" + NewLine + "[assembly: MyAttribute(), SomeAttribute()]";
+        var expected = """
+            using SomeNamespace;
+
+            [assembly: MyAttribute(), SomeAttribute()]
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
+    [Fact]
+    public void AssemblyAttributeLists()
+    {
+        var input = """
+            using SomeNamespace;
+            [assembly: SomeAttribute(), MyAttribute()]
+            """
+        + NewLine + "[assembly: SomeOtherAttribute(), MyAttribute2()]";
+
+        var result = Process(input);
+
+        var expected = """
+            using SomeNamespace;
+
+            [assembly: MyAttribute(), MyAttribute2(), SomeAttribute(), SomeOtherAttribute()]
+            """;
+
+        Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
+    }
+
 
     [Fact]
     public void MultipleAssemblyAttributes()
     {
         var input = new[]
         {
-            "using SomeNamespace;" + NewLine + "" +
-            "[assembly: SomeAttribute2()]" + NewLine + "",
+            """
+            using SomeNamespace;
+            [assembly: SomeAttribute2()]
+
+            """,
             "[assembly: SomeAttribute1()]"
         };
 
         var result = input.Aggregate(true);
 
-        var expected = "using SomeNamespace;" + NewLine + "" +
-                        "" + NewLine + "" +
-                        "[assembly: SomeAttribute1(), SomeAttribute2()]";
+        var expected = """
+            using SomeNamespace;
+
+            [assembly: SomeAttribute1(), SomeAttribute2()]
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -226,8 +285,11 @@ public class SourceAggregatorTests
     {
         var input = new[]
         {
-            "using SomeNamespace;" + NewLine + "" +
-            "[assembly: SomeAttribute2()]" + NewLine + "",
+            """
+            using SomeNamespace;
+            [assembly: SomeAttribute2()]
+
+            """,
             "[assembly: SomeAttribute1()]"
         };
 
@@ -245,19 +307,24 @@ public class SourceAggregatorTests
 
         var result = Process(input);
 
-        var expected = "using Some.Using;" + NewLine + "" +
-                        "" + NewLine + "" +
-                        "namespace Some.Namespace" + NewLine + "" +
-                        "{" + NewLine + "" +
-                        "    class SomeClass { }" + NewLine + "" +
-                        "}";
+        var expected = """
+            using Some.Using;
+
+            namespace Some.Namespace
+            {
+                class SomeClass { }
+            }
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
     [Fact]
     public void TwoSameUsingsAreGrouped()
     {
-        var input = "using MyUsing;\r\nusing MyUsing;";
+        var input = """
+            using MyUsing;
+            using MyUsing;
+            """;
         var result = Process(input);
         var expected = "using MyUsing;";
 
@@ -266,9 +333,15 @@ public class SourceAggregatorTests
     [Fact]
     public void TwoDifferentUsingsAreOrdered()
     {
-        var input = "using MyUsing2;\r\nusing MyUsing1;";
+        var input = """
+            using MyUsing2;
+            using MyUsing1;
+            """;
         var result = Process(input);
-        const string expected = "using MyUsing1;\r\nusing MyUsing2;";
+        const string expected = """
+            using MyUsing1;
+            using MyUsing2;
+            """;
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
     [Fact]
@@ -278,17 +351,23 @@ public class SourceAggregatorTests
 
         var result = Process(input);
 
-        var expected = "namespace Some.Namespace" + NewLine + "" +
-            "{" + NewLine + "" +
-            "    using static SomeClass;" + NewLine + "" +
-            "}";
+        var expected = """
+            namespace Some.Namespace
+            {
+                using static SomeClass;
+            }
+            """;
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
 
     [Fact]
     public void ConditionalIsStripped()
     {
-        var input = "#if CONDITIONAL\r\nusing MyUsing;" + NewLine + "#endif";
+        var input = """
+            #if CONDITIONAL
+            using MyUsing;
+            #endif
+            """;
         var result = Process(input, "CONDITIONAL");
         const string expected = "using MyUsing;";
 
@@ -298,9 +377,17 @@ public class SourceAggregatorTests
     [Fact]
     public void ConditionalIsStrippedFromCode()
     {
-        var input = "using MyUsing1;" + NewLine + "#if CONDITIONAL\r\nusing MyUsing;" + NewLine + "#endif";
+        var input = """
+            using MyUsing1;
+            #if CONDITIONAL
+            using MyUsing;
+            #endif
+            """;
         var result = Process(input, "CONDITIONAL");
-        const string expected = "using MyUsing;\r\nusing MyUsing1;";
+        const string expected = """
+            using MyUsing;
+            using MyUsing1;
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -310,19 +397,23 @@ public class SourceAggregatorTests
     public void WhenCompilingWithPreprocessorDirective_ConditionalCodeIsRetained()
     {
         var input =
-            "namespace Abc.Def" + NewLine + "" +
-            "{" + NewLine + "" +
-            "#if CONDITIONAL" + NewLine + "" +
-            "   class ConditionalClass{}" + NewLine + "" +
-            "#endif" + NewLine + "" +
-            "}";
+            """
+            namespace Abc.Def
+            {
+            #if CONDITIONAL
+               class ConditionalClass{}
+            #endif
+            }
+            """;
 
-        var result = Process(input, new[] { "CONDITIONAL" });
+        var result = Process(input, ["CONDITIONAL"]);
 
-        var expected = "namespace Abc.Def" + NewLine + "" +
-            "{" + NewLine + "" +
-            "    class ConditionalClass { }" + NewLine + "" +
-            "}";
+        var expected = """
+            namespace Abc.Def
+            {
+                class ConditionalClass { }
+            }
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -332,7 +423,7 @@ public class SourceAggregatorTests
         string input = "using Some.Using;";
         string expected = "using Some.Using;";
 
-        var result = Process(input, new string[] { "CONDITIONAL" });
+        var result = Process(input, ["CONDITIONAL"]);
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -340,9 +431,11 @@ public class SourceAggregatorTests
     [Fact]
     public void ConditionalUsing_NoPreprocessorSymbols_UsingIsRemoved()
     {
-        string input = "#if CONDITIONAL" + NewLine + "" +
-            "using Some.Using;" + NewLine + "" +
-            "#endif";
+        string input = """
+            #if CONDITIONAL
+            using Some.Using;
+            #endif
+            """;
 
         var result = Process(input, Array.Empty<string>());
         var expected = string.Empty;
@@ -352,9 +445,11 @@ public class SourceAggregatorTests
     [Fact]
     public void ConditionalUsing_WithPreprocessorSymbol_UsingIsMaintained()
     {
-        string input = "#if CONDITIONAL" + NewLine + "" +
-            "using Some.Using;" + NewLine + "" +
-            "#endif";
+        string input = """
+            #if CONDITIONAL
+            using Some.Using;
+            #endif
+            """;
 
         string expected = "using Some.Using;";
 
@@ -367,35 +462,46 @@ public class SourceAggregatorTests
     public void WhenCompilingWithoutConditionalDirective_ConditionalCodeIsStrippedAway()
     {
         var input =
-            "#if CONDITIONAL" + NewLine + "" +
-            "using Some.ConditionalUsing;" + NewLine + "" +
-            "#endif" + NewLine + "" +
-            "using Some.Using1;" + NewLine + "" +
-            "namespace Abc.Def" + NewLine + "" +
-            "{" + NewLine + "" +
-            "#if CONDITIONAL" + NewLine + "" +
-            "   class ConditionalClass{}" + NewLine + "" +
-            "#endif" + NewLine + "" +
-            "}";
+            """
+            #if CONDITIONAL
+            using Some.ConditionalUsing;
+            #endif
+            using Some.Using1;
+            namespace Abc.Def
+            {
+            #if CONDITIONAL
+               class ConditionalClass{}
+            #endif
+            }
+            """;
 
         var result = Process(input);
 
         var expected =
-            "using Some.Using1;" + NewLine + "" + NewLine + "" +
-            "namespace Abc.Def" + NewLine + "" +
-            "{" + NewLine + "" +
-            "}";
+            """
+            using Some.Using1;
+
+            namespace Abc.Def
+            {
+            }
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
     [Fact]
     public void ProcessUsings()
     {
-        string input = "using MyUsing1;\r\nusing MyUsing2;";
+        string input = """
+            using MyUsing1;
+            using MyUsing2;
+            """;
 
         string result = Process(input);
 
-        const string expected = "using MyUsing1;\r\nusing MyUsing2;";
+        const string expected = """
+            using MyUsing1;
+            using MyUsing2;
+            """;
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
     [Fact]
@@ -413,24 +519,34 @@ public class SourceAggregatorTests
     public void ConditionalIsNotStrippedFromCode()
     {
         string input =
-    "using MyUsing1;" + NewLine + "" +
-    "#if CONDITIONAL" + NewLine + "" +
-    "using MyUsing2;" + NewLine + "" +
-    "#endif";
+    """
+    using MyUsing1;
+    #if CONDITIONAL
+    using MyUsing2;
+    #endif
+    """;
         string result = Process(input, "CONDITIONAL");
-        const string expected = "using MyUsing1;\r\nusing MyUsing2;";
+        const string expected = """
+            using MyUsing1;
+            using MyUsing2;
+            """;
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
 
     [Fact]
     public void ClassWithComment()
     {
-        var input = "// some comment\r\nclass SomeClass {}";
+        var input = """
+            // some comment
+            class SomeClass {}
+            """;
 
         var result = Process(input);
 
-        var expected = "// some comment" + NewLine + "" +
-                        "class SomeClass { }";
+        var expected = """
+            // some comment
+            class SomeClass { }
+            """;
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -438,13 +554,15 @@ public class SourceAggregatorTests
     [Fact]
     public void ConditionalMethod_NoSymbols_MethodIsStripped()
     {
-        string input = "class SomeClass {" + NewLine + "" +
-            "#if CONDITIONAL" + NewLine + "" +
-            "    void MyMethod()" + NewLine + "" +
-            "    {" + NewLine + "" +
-            "    }" + NewLine + "" +
-            "#endif" + NewLine + "" +
-            "}";
+        string input = """
+            class SomeClass {
+            #if CONDITIONAL
+                void MyMethod()
+                {
+                }
+            #endif
+            }
+            """;
 
         string expected = "class SomeClass { }";
 
@@ -456,23 +574,27 @@ public class SourceAggregatorTests
     [Fact]
     public void ConditionalMethod_WithSymbols_MethodIsNotStripped()
     {
-        string input = "class SomeClass {" + NewLine + "" +
-                        "#if CONDITIONAL1" + NewLine + "" +
-                        "    void MyMethod1()" + NewLine + "" +
-                        "    {" + NewLine + "" +
-                        "    }" + NewLine + "" +
-                        "#endif" + NewLine + "" +
-                        "#if CONDITIONAL2" + NewLine + "" +
-                        "    void MyMethod2()" + NewLine + "" +
-                        "    {" + NewLine + "" +
-                        "    }" + NewLine + "" +
-                        "#endif" + NewLine + "" +
-                        "}";
+        string input = """
+            class SomeClass {
+            #if CONDITIONAL1
+                void MyMethod1()
+                {
+                }
+            #endif
+            #if CONDITIONAL2
+                void MyMethod2()
+                {
+                }
+            #endif
+            }
+            """;
 
-        string expected = "class SomeClass" + NewLine + "" +
-                            "{" + NewLine + "" +
-                            "    void MyMethod2() { }" + NewLine + "" +
-                            "}";
+        string expected = """
+            class SomeClass
+            {
+                void MyMethod2() { }
+            }
+            """;
 
         var result = Process(input, "CONDITIONAL2");
 
@@ -482,19 +604,23 @@ public class SourceAggregatorTests
     [Fact]
     public void ConditionalClass_WithDirective_ClassIsStripped()
     {
-        string input = "namespace Abc.Def" + NewLine + "" +
-            "{" + NewLine + "" +
-            "#if CONDITIONAL" + NewLine + "" +
-            "   class ConditionalClass{}" + NewLine + "" +
-            "#endif" + NewLine + "" +
-            "}";
+        string input = """
+            namespace Abc.Def
+            {
+            #if CONDITIONAL
+               class ConditionalClass{}
+            #endif
+            }
+            """;
 
-        string expected = "namespace Abc.Def" + NewLine + "" +
-                        "{" + NewLine + "" +
-                        "    class ConditionalClass { }" + NewLine + "" +
-                        "}";
+        string expected = """
+            namespace Abc.Def
+            {
+                class ConditionalClass { }
+            }
+            """;
 
-        var result = Process(input, new string[] { "CONDITIONAL" });
+        var result = Process(input, ["CONDITIONAL"]);
 
         Assert.Equal(expected, result, ignoreLineEndingDifferences: true);
     }
@@ -502,18 +628,7 @@ public class SourceAggregatorTests
     [Fact]
     public void ObjectInitializerShouldBeProperlyFormatted()
     {
-        var input = "var p = new MyClass(a,b,c)" +
-            "{" +
-            "  Alfa = \"SomeValue\", " +
-            "  Bravo = OtherValue," +
-            "  Charlie = 5," +
-            "  Delta = \"SomeValue\", " +
-            "  Echo = OtherValue," +
-            "  Foxtrot = 5," +
-            "  Golf = \"SomeValue\", " +
-            "  Hotel = OtherValue," +
-            "  India = 5" +
-            "}";
+        var input = "var p = new MyClass(a,b,c){  Alfa = \"SomeValue\",   Bravo = OtherValue,  Charlie = 5,  Delta = \"SomeValue\",   Echo = OtherValue,  Foxtrot = 5,  Golf = \"SomeValue\",   Hotel = OtherValue,  India = 5}";
 
         var expected = "var p = new MyClass(a, b, c)" + NewLine +
             "{" + NewLine +
@@ -568,10 +683,7 @@ public class SourceAggregatorTests
         string input = "class C" + NewLine +
             "{" + NewLine +
             "    public void M(char c) {" + NewLine +
-            "    switch c" +
-            "    { " +
-            "        case 'x': return 1; " +
-            "        case 'y': return 2;" + NewLine +
+            "    switch c    {         case 'x': return 1;         case 'y': return 2;" + NewLine +
             "    }" + NewLine +
             "}" + NewLine +
             "}"
